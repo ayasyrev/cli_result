@@ -11,6 +11,13 @@ RESULTS_FOLDER = "results"
 ARGS_FILENAME_SUFFIX = "args"
 SPLIT = "__"
 
+DEF_ARGS = {
+    "help": "--help",
+    "short_flag_help": "-h",
+    "no_args": "",
+}
+
+
 def validate_args(args: StrListStr) -> list[str]:
     """convert args to list of strings"""
     if isinstance(args, str):
@@ -50,6 +57,33 @@ def get_args(
             if not line.startswith("#")
         ]
     return {item[0]: item[1].split() for item in lines}
+
+
+def test_args(args: dict[str, str]) -> dict[str, str]:
+    """test script args - join defaults with given args"""
+    return {**DEF_ARGS, **args}
+
+
+def write_result(
+        filename: Path,
+        stdout: str,
+        stderr: str,
+        arg_name: str,
+        args: list[str] | None,
+) -> None:
+    """write result to file"""
+    if args is None:
+        args = []
+    result_filename = Path(
+        EXAMPLES_FOLDER,
+        RESULTS_FOLDER,
+        f"{filename.stem}{SPLIT}{arg_name}.txt",
+    )
+    with open(result_filename, "w", encoding="utf-8") as file:
+        file.write(
+            f"# result for run {filename} with args: {', '.join(args)}\n"
+        )
+        file.write(f"# stdout\n{stdout}# stderr\n{stderr}")
 
 
 def read_result(filename: Path, arg_name: str) -> tuple[str, str]:
