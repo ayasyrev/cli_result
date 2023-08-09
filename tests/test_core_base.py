@@ -1,3 +1,5 @@
+import sys
+
 from pathlib import Path
 
 from cli_result.core import (
@@ -126,6 +128,22 @@ def test_run_script():
     res, err = run_script("wrong_name")
     assert res == ""
     assert err == ""
+
+
+def test_equal_with_replace():
+    """test equal_with_replace"""
+    res = "example_2.py\nsome text"
+    expected_res = "example_1.py\nsome text"
+    assert equal_with_replace(res, expected_res, "example_2", "example_1")
+
+    res = "example_2.py\nsome text\noptional arguments: some options"
+    expected_res = "example_1.py\nsome text\noptions: some options"
+
+    if sys.version_info.minor < 10:
+        assert equal_with_replace(res, expected_res, "example_2", "example_1")
+
+    # false
+    assert not equal_with_replace("", expected_res, "example_2", "example_1")
 
 
 def test_check_examples():

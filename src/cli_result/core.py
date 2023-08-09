@@ -170,12 +170,12 @@ def check_examples(
                 expected_res, expected_err = read_result(experiment_name, name, cfg)
                 if res != expected_res:
                     if not equal_with_replace(
-                        res, expected_res, experiment_name, filename.stem
+                        res, expected_res, filename.stem, experiment_name,
                     ):
                         errors[name].append({filename: [res, expected_res]})
                 if err != expected_err:
                     if not equal_with_replace(
-                        res, expected_res, experiment_name, filename.stem
+                        res, expected_res, filename.stem, experiment_name,
                     ):
                         errors[name].append({filename: [err, expected_err]})
         if errors:
@@ -184,12 +184,13 @@ def check_examples(
 
 
 def equal_with_replace(
-    res: str, expected_res: str, experiment_name: str, filename: str
+    res: str, expected_res: str, filename: str, experiment_name: str,
 ) -> bool:
     """Check if after replace result is equal to expected"""
-    if res.replace(filename, experiment_name) == expected_res:
+    replaced = res.replace(filename, experiment_name)
+    if replaced == expected_res:
         return True
-    if ARGPARSE_OLD:
-        if res.replace("optional arguments", "options") == expected_res:
+    if ARGPARSE_OLD:  # pragma: no cover
+        if replaced.replace("optional arguments", "options") == expected_res:  # pragma: no cover
             return True
     return False
