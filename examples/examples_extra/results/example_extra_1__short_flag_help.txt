@@ -1,0 +1,8 @@
+# result for run example_extra_1 with args: -h
+# stdout
+usage: example_extra_1.py [-h] [--echo ECHO]
+
+options:
+  -h, --help   show this help message and exit
+  --echo ECHO
+# stderr

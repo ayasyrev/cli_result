@@ -1,0 +1,5 @@
+# result for run example_1 with args: ""
+# stdout
+# stderr
+usage: example_1.py [-h] [--echo ECHO]
+example_1.py: error: unrecognized arguments: ""
