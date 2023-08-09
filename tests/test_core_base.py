@@ -1,13 +1,13 @@
 from pathlib import Path
-import subprocess
 
 from cli_result.core import (
     Cfg,
+    equal_with_replace,
     get_args,
     get_examples_names,
     read_result,
     run_script,
-    test_examples,
+    check_examples,
     validate_args,
 )
 
@@ -49,9 +49,7 @@ def test_get_examples_names():
     assert len(examples) == 1
     example_1 = list(examples.keys())[0]
     assert example_1 == "example_extra_1"
-    assert examples[example_1][0] == Path(
-        "examples/examples_extra/example_extra_1.py"
-    )
+    assert examples[example_1][0] == Path("examples/examples_extra/example_extra_1.py")
     assert len(examples[example_1]) == 2
 
 
@@ -119,7 +117,9 @@ def test_run_script():
 
     res, err = run_script(filename, "--help")
     expected = read_result(name, "help")
-    assert res == expected[0]
+    assert res == expected[0] or equal_with_replace(
+        res, expected[0], name, filename.stem
+    )
     assert err == expected[1]
 
     # file not exist
@@ -128,13 +128,13 @@ def test_run_script():
     assert err == ""
 
 
-def test_test_examples():
-    """test test_examples"""
+def test_check_examples():
+    """test check_examples"""
     cfg = Cfg()
-    results = test_examples(cfg)
-    assert not results
+    results = check_examples(cfg)
+    assert results is None
 
     # extra
     cfg = Cfg(examples_path="examples/examples_extra")
-    results = test_examples(cfg)
-    assert not results
+    results = check_examples(cfg)
+    assert results is None

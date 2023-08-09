@@ -1,14 +1,19 @@
 """ Test for run scripts and compare output with expected results.
 """
+from __future__ import annotations
+import sys
+
+import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-import subprocess
-from typing import Union
+from typing import Dict, List, Union
 
-
-StrListStr = Union[str, list[str], None]
+StrListStr = Union[str, List[str], None]
 PathStr = Union[str, Path, None]
+
+
+ARGPARSE_OLD = sys.version_info.minor < 10
 
 
 @dataclass
@@ -148,14 +153,14 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
     return res, err
 
 
-def test_examples(
+def check_examples(
     cfg: Cfg = None,
-) -> dict[str : dict[str, str]]:
+) -> Dict[str : Dict[str, str]] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
     experiments = get_examples_names(cfg)
-    results = defaultdict(dict[str, list[str]])
+    results = defaultdict(Dict[str, List[str]])
     for experiment_name, filenames in experiments.items():
         name_args = get_args(experiment_name)
         errors = defaultdict(list)
@@ -163,16 +168,28 @@ def test_examples(
             for filename in filenames:
                 res, err = run_script(filename, args)
                 expected_res, expected_err = read_result(experiment_name, name, cfg)
-                if (
-                    res != expected_res
-                    and res.replace(filename.stem, experiment_name) != expected_res
-                ):
-                    errors[name].append({filename: [res, expected_res]})
-                if (
-                    err != expected_err
-                    and err.replace(filename.stem, experiment_name) != expected_err
-                ):
-                    errors[name].append({filename: [err, expected_err]})
+                if res != expected_res:
+                    if not equal_with_replace(
+                        res, expected_res, experiment_name, filename.stem
+                    ):
+                        errors[name].append({filename: [res, expected_res]})
+                if err != expected_err:
+                    if not equal_with_replace(
+                        res, expected_res, experiment_name, filename.stem
+                    ):
+                        errors[name].append({filename: [err, expected_err]})
         if errors:
             results[experiment_name] = errors
-    return results
+    return results or None
+
+
+def equal_with_replace(
+    res: str, expected_res: str, experiment_name: str, filename: str
+) -> bool:
+    """Check if after replace result is equal to expected"""
+    if res.replace(filename, experiment_name) == expected_res:
+        return True
+    if ARGPARSE_OLD:
+        if res.replace("optional arguments", "options") == expected_res:
+            return True
+    return False
