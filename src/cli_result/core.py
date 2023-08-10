@@ -93,11 +93,11 @@ def write_result(
     stdout: str,
     stderr: str,
     arg_name: str,
-    args: list[str] | None,
+    args: list[str] | None = None,
     cfg: Cfg = None,
 ) -> None:
     """write result to file"""
-    if cfg is None:
+    if cfg is None:  # pragma: no cover
         cfg = Cfg()
     if args is None:
         args = []
@@ -106,8 +106,8 @@ def write_result(
         cfg.results_path,
         f"{name}{cfg.split}{arg_name}.txt",
     )
-    if not result_filename.parent.exists():
-        result_filename.parent.mkdir(parents=True)
+    # if not result_filename.parent.exists():
+    #     result_filename.parent.mkdir(parents=True)
     print(f"  {name}: {args}, filename: {result_filename}")
     with open(result_filename, "w", encoding="utf-8") as file:
         file.write(f"# result for run {name} with args: {', '.join(args)}\n")
@@ -118,7 +118,7 @@ def write_experiments(
     cfg: Cfg = None,
 ) -> None:
     """write experiments results to file"""
-    if cfg is None:
+    if cfg is None:  # pragma: no cover
         cfg = Cfg()
     experiments = get_examples_names(cfg)
     for experiment_name, filenames in experiments.items():
@@ -162,7 +162,7 @@ def check_examples(
     experiments = get_examples_names(cfg)
     results = defaultdict(Dict[str, List[str]])
     for experiment_name, filenames in experiments.items():
-        name_args = get_args(experiment_name)
+        name_args = get_args(experiment_name, cfg)
         errors = defaultdict(list)
         for name, args in name_args.items():
             for filename in filenames:
@@ -170,12 +170,18 @@ def check_examples(
                 expected_res, expected_err = read_result(experiment_name, name, cfg)
                 if res != expected_res:
                     if not equal_with_replace(
-                        res, expected_res, filename.stem, experiment_name,
+                        res,
+                        expected_res,
+                        filename.stem,
+                        experiment_name,
                     ):
                         errors[name].append({filename: [res, expected_res]})
                 if err != expected_err:
                     if not equal_with_replace(
-                        res, expected_res, filename.stem, experiment_name,
+                        res,
+                        expected_res,
+                        filename.stem,
+                        experiment_name,
                     ):
                         errors[name].append({filename: [err, expected_err]})
         if errors:
@@ -184,13 +190,18 @@ def check_examples(
 
 
 def equal_with_replace(
-    res: str, expected_res: str, filename: str, experiment_name: str,
+    res: str,
+    expected_res: str,
+    filename: str,
+    experiment_name: str,
 ) -> bool:
     """Check if after replace result is equal to expected"""
     replaced = res.replace(filename, experiment_name)
     if replaced == expected_res:
         return True
     if ARGPARSE_OLD:  # pragma: no cover
-        if replaced.replace("optional arguments", "options") == expected_res:  # pragma: no cover
+        if (
+            replaced.replace("optional arguments", "options") == expected_res
+        ):  # pragma: no cover
             return True
     return False

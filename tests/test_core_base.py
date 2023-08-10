@@ -1,3 +1,4 @@
+import shutil
 import sys
 
 from pathlib import Path
@@ -11,8 +12,11 @@ from cli_result.core import (
     run_script,
     check_examples,
     validate_args,
+    write_experiments,
+    write_result,
 )
 
+VERSION_LESS_10 = sys.version_info.minor < 10
 
 HELP_RES = """usage: example_1.py [-h] [--echo ECHO]
 
@@ -139,7 +143,7 @@ def test_equal_with_replace():
     res = "example_2.py\nsome text\noptional arguments: some options"
     expected_res = "example_1.py\nsome text\noptions: some options"
 
-    if sys.version_info.minor < 10:
+    if VERSION_LESS_10:
         assert equal_with_replace(res, expected_res, "example_2", "example_1")
 
     # false
@@ -148,6 +152,11 @@ def test_equal_with_replace():
 
 def test_check_examples():
     """test check_examples"""
+    # no args
+    results = check_examples()
+    assert results is None
+
+    # default config
     cfg = Cfg()
     results = check_examples(cfg)
     assert results is None
@@ -156,3 +165,69 @@ def test_check_examples():
     cfg = Cfg(examples_path="examples/examples_extra")
     results = check_examples(cfg)
     assert results is None
+
+    # errors
+    cfg = Cfg(examples_path="tests/examples/examples_errors")
+    results = check_examples(cfg)
+    assert results
+
+
+def test_write_experiments(tmp_path: Path):
+    """test write_experiments"""
+    cfg = Cfg(examples_path=tmp_path)
+
+    examples_path = Path("tests/examples")
+    results_path = examples_path / cfg.results_path
+    example_fn = "exmpl_1.py"
+    example_args_fn = "exmpl_1__args.txt"
+
+    # create tmp example folder w/ experiment
+    test_example = tmp_path / example_fn
+    shutil.copy(examples_path / example_fn, test_example)
+    assert test_example.exists()
+
+    assert (results_path / example_args_fn).exists()
+    test_results_path = tmp_path / cfg.results_path
+    test_results_path.mkdir()
+    shutil.copy(results_path / example_args_fn, test_results_path / example_args_fn)
+    assert (tmp_path / "results" / "exmpl_1__args.txt").exists()
+
+    write_experiments(cfg)
+    res_files = list(results_path.glob("*.txt"))
+    test_results_files = list(test_results_path.glob("*.txt"))
+    assert len(res_files) == len(test_results_files)
+    for file in res_files:
+        with open(file, "r", encoding="utf-8") as fh:
+            res = fh.read()
+        with open(test_results_path / file.name, "r", encoding="utf-8") as fh:
+            test = fh.read()
+        if VERSION_LESS_10:
+            assert test.replace("optional arguments", "options") == res
+        else:
+            assert res == test
+
+    # single result
+    example_name = "example_name"
+    arg_name = "arg_name"
+    args = ["arg1", "arg2"]
+    write_result(example_name, "res", "err", arg_name, args, cfg)
+    result_file = test_results_path / f"{example_name}{cfg.split}{arg_name}.txt"
+    assert result_file.exists()
+    res, err = read_result(example_name, arg_name, cfg)
+    assert res == "res"
+    assert err == "err"
+    with open(result_file, "r", encoding="utf-8") as fh:
+        first_line = fh.readline()
+    assert first_line.split("args: ", maxsplit=1)[1] == "arg1, arg2\n"
+
+    # no args
+    arg_name = "no_arg"
+    write_result(example_name, "res", "err", arg_name, cfg=cfg)
+    result_file = test_results_path / f"{example_name}{cfg.split}{arg_name}.txt"
+    assert result_file.exists()
+    res, err = read_result(example_name, arg_name, cfg)
+    assert res == "res"
+    assert err == "err"
+    with open(result_file, "r", encoding="utf-8") as fh:
+        first_line = fh.readline()
+    assert first_line.split("args: ", maxsplit=1)[1].rstrip() == ""
