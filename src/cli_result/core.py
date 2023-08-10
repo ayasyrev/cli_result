@@ -1,24 +1,29 @@
 """ Test for run scripts and compare output with expected results.
 """
+from __future__ import annotations
+import sys
+
+import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-import subprocess
-from typing import Union
+from typing import Dict, List, Union
 
-
-StrListStr = Union[str, list[str], None]
+StrListStr = Union[str, List[str], None]
 PathStr = Union[str, Path, None]
+
+
+ARGPARSE_OLD = sys.version_info.minor < 10
 
 
 @dataclass
 class Cfg:
     """base config for cli_result"""
 
-    examples_path = "examples"
-    results_path = "results"
-    args_filename_suffix = "args"
-    split = "__"
+    examples_path: str = "examples"
+    results_path: str = "results"
+    args_filename_suffix: str = "args"
+    split: str = "__"
 
 
 def get_examples_names(
@@ -49,6 +54,8 @@ def validate_args(args: StrListStr) -> list[str]:
 def run_script(filename: str, args: StrListStr = None) -> tuple[str, str]:
     """run script"""
     args = validate_args(args)
+    if not Path(filename).exists():
+        return "", ""
     res = subprocess.run(
         ["python", filename, *args],
         capture_output=True,
@@ -70,13 +77,15 @@ def get_args(
         cfg.results_path,
         f"{name}{cfg.split}{cfg.args_filename_suffix}.txt",
     )
+    if not args_filename.exists():
+        return {}
     with open(args_filename, "r", encoding="utf-8") as file:
         lines = [
-            line.split(": ", maxsplit=1)
+            line.split("#", maxsplit=1)[0].rstrip().split(":", maxsplit=1)
             for line in file.readlines()
             if line != "\n" and not line.startswith("#")
         ]
-    return {item[0]: item[1].split() for item in lines}
+    return {item[0]: item[1].split() if len(item) == 2 else None for item in lines}
 
 
 def write_result(
@@ -84,11 +93,11 @@ def write_result(
     stdout: str,
     stderr: str,
     arg_name: str,
-    args: list[str] | None,
+    args: list[str] | None = None,
     cfg: Cfg = None,
 ) -> None:
     """write result to file"""
-    if cfg is None:
+    if cfg is None:  # pragma: no cover
         cfg = Cfg()
     if args is None:
         args = []
@@ -97,8 +106,9 @@ def write_result(
         cfg.results_path,
         f"{name}{cfg.split}{arg_name}.txt",
     )
-    if not result_filename.parent.exists():
-        result_filename.parent.mkdir(parents=True)
+    # if not result_filename.parent.exists():
+    #     result_filename.parent.mkdir(parents=True)
+    print(f"  {name}: {args}, filename: {result_filename}")
     with open(result_filename, "w", encoding="utf-8") as file:
         file.write(f"# result for run {name} with args: {', '.join(args)}\n")
         file.write(f"# stdout\n{stdout}# stderr\n{stderr}")
@@ -108,11 +118,12 @@ def write_experiments(
     cfg: Cfg = None,
 ) -> None:
     """write experiments results to file"""
-    if cfg is None:
+    if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    experiments = get_examples_names(cfg.example_path)
+    experiments = get_examples_names(cfg)
     for experiment_name, filenames in experiments.items():
-        name_args = get_args(experiment_name)
+        print(f"Writing results for {experiment_name}")
+        name_args = get_args(experiment_name, cfg)
         for name, args in name_args.items():
             write_result(
                 experiment_name,
@@ -123,7 +134,7 @@ def write_experiments(
             )
 
 
-def read_result(name: Path, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
+def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
     """read result from file, return stdout and stderr.
     If not found, return empty strings
     """
@@ -142,31 +153,55 @@ def read_result(name: Path, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
     return res, err
 
 
-def test_examples(
+def check_examples(
     cfg: Cfg = None,
-) -> dict[str : dict[str, str]]:
+) -> Dict[str : Dict[str, str]] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
     experiments = get_examples_names(cfg)
-    results = defaultdict(dict[str, list[str]])
+    results = defaultdict(Dict[str, List[str]])
     for experiment_name, filenames in experiments.items():
-        name_args = get_args(experiment_name)
+        name_args = get_args(experiment_name, cfg)
         errors = defaultdict(list)
         for name, args in name_args.items():
             for filename in filenames:
                 res, err = run_script(filename, args)
                 expected_res, expected_err = read_result(experiment_name, name, cfg)
-                if (
-                    res != expected_res
-                    and res.replace(filename.stem, experiment_name) != expected_res
-                ):
-                    errors[name].append({filename: [res, expected_res]})
-                if (
-                    err != expected_err
-                    and err.replace(filename.stem, experiment_name) != expected_err
-                ):
-                    errors[name].append({filename: [err, expected_err]})
+                if res != expected_res:
+                    if not equal_with_replace(
+                        res,
+                        expected_res,
+                        filename.stem,
+                        experiment_name,
+                    ):
+                        errors[name].append({filename: [res, expected_res]})
+                if err != expected_err:
+                    if not equal_with_replace(
+                        res,
+                        expected_res,
+                        filename.stem,
+                        experiment_name,
+                    ):
+                        errors[name].append({filename: [err, expected_err]})
         if errors:
             results[experiment_name] = errors
-    return results
+    return results or None
+
+
+def equal_with_replace(
+    res: str,
+    expected_res: str,
+    filename: str,
+    experiment_name: str,
+) -> bool:
+    """Check if after replace result is equal to expected"""
+    replaced = res.replace(filename, experiment_name)
+    if replaced == expected_res:
+        return True
+    if ARGPARSE_OLD:  # pragma: no cover
+        if (
+            replaced.replace("optional arguments", "options") == expected_res
+        ):  # pragma: no cover
+            return True
+    return False
