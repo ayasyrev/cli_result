@@ -1,7 +1,7 @@
-site_name: Test script result.
+site_name: Cli_result
 repo_url: https://github.com/ayasyrev/cli_result
 repo_name: cli_result
-docs_dir: docs
+docs_dir: docs  # The docs directory.
 
 theme:
   name: material
@@ -20,6 +20,7 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+
 extra:
   analytics:
     provider: google
