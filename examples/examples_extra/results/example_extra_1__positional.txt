@@ -1,0 +1,5 @@
+# result for run example_extra_1 with args: cl_arg
+# stdout
+# stderr
+usage: example_extra_1.py [-h] [--echo ECHO]
+example_extra_1.py: error: unrecognized arguments: cl_arg
