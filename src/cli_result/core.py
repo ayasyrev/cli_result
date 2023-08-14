@@ -7,7 +7,7 @@ import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 StrListStr = Union[str, List[str], None]
 PathStr = Union[str, Path, None]
@@ -28,18 +28,27 @@ class Cfg:
 
 def get_examples_names(
     cfg: Cfg = None,
+    names: str | List[str] | None = None,
 ) -> dict[str, list[Path]]:
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
-    examples_names = defaultdict(list)
+    names_files: Dict[str, List[str]] = defaultdict(list)
     for filename in Path(cfg.examples_path).glob("*.py"):
         example_name = filename.stem.split(cfg.split)[0]
         if example_name == filename.stem:
-            examples_names[example_name].insert(0, filename)
+            names_files[example_name].insert(0, filename)
         else:
-            examples_names[example_name].append(filename)
-    return examples_names
+            names_files[example_name].append(filename)
+    if names is None:
+        return names_files
+    if isinstance(names, str):
+        names = [names]
+    return {
+        example_name: file_list
+        for example_name, file_list in names_files.items()
+        if example_name in names
+    }
 
 
 def validate_args(args: StrListStr) -> list[str]:
@@ -114,19 +123,20 @@ def write_result(
         file.write(f"# stdout\n{stdout}# stderr\n{stderr}")
 
 
-def write_experiments(
+def write_examples(
     cfg: Cfg = None,
+    examples: str | List[str] | None = None,
 ) -> None:
     """write experiments results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    experiments = get_examples_names(cfg)
-    for experiment_name, filenames in experiments.items():
-        print(f"Writing results for {experiment_name}")
-        name_args = get_args(experiment_name, cfg)
+    examples = get_examples_names(cfg, examples)
+    for example_name, filenames in examples.items():
+        print(f"Writing results for {example_name}")
+        name_args = get_args(example_name, cfg)
         for name, args in name_args.items():
             write_result(
-                experiment_name,
+                example_name,
                 *run_script(filenames[0], args),
                 name,
                 args,
@@ -169,39 +179,63 @@ def check_examples(
                 res, err = run_script(filename, args)
                 expected_res, expected_err = read_result(experiment_name, name, cfg)
                 if res != expected_res:
-                    if not equal_with_replace(
+                    if not usage_equal_with_replace(
                         res,
                         expected_res,
-                        filename.stem,
-                        experiment_name,
                     ):
-                        errors[name].append({filename: [res, expected_res]})
+                        errors[name].append({str(filename): [res, expected_res]})
                 if err != expected_err:
-                    if not equal_with_replace(
-                        res,
-                        expected_res,
-                        filename.stem,
-                        experiment_name,
+                    if not usage_equal_with_replace(
+                        err,
+                        expected_err,
                     ):
-                        errors[name].append({filename: [err, expected_err]})
+                        errors[name].append({str(filename): [err, expected_err]})
         if errors:
             results[experiment_name] = errors
     return results or None
 
 
-def equal_with_replace(
+def split_usage(res: str) -> Tuple[str, str]:
+    """Split result to usage (as one line) and other."""
+    lines = res.split("\n")
+    usage_lines = []
+    num = 0
+    for num, line in enumerate(lines):
+        if line == "":
+            break
+        usage_lines.append(line.strip())
+    return " ".join(usage_lines), "\n".join(lines[num + 1 :])
+
+
+def get_prog_name(usage: str) -> str:
+    """Get prog name"""
+    if usage.startswith("usage: "):
+        return usage.split("usage: ", maxsplit=1)[1].split(" ", maxsplit=1)[0]
+    return ""
+
+
+def replace_prog_name(usage: str, usage_expected: str) -> str:
+    """Replace prog name"""
+    prog_name = get_prog_name(usage)
+    expected_name = get_prog_name(usage_expected) or prog_name
+    return usage.replace(prog_name, expected_name)
+
+
+def usage_equal_with_replace(
     res: str,
     expected_res: str,
-    filename: str,
-    experiment_name: str,
 ) -> bool:
-    """Check if after replace result is equal to expected"""
-    replaced = res.replace(filename, experiment_name)
-    if replaced == expected_res:
-        return True
-    if ARGPARSE_OLD:  # pragma: no cover
-        if (
-            replaced.replace("optional arguments", "options") == expected_res
-        ):  # pragma: no cover
-            return True
+    """Check if usage and after replace result is equal to expected"""
+    if res.startswith("usage:"):
+        usage, other = split_usage(res)
+        usage_expected, other_expected = split_usage(expected_res)
+        usage_replaced = replace_prog_name(usage, usage_expected)
+        if usage_replaced == usage_expected:
+            if other == other_expected:
+                return True
+            if ARGPARSE_OLD:  # pragma: no cover
+                if (
+                    other.replace("optional arguments", "options") == other_expected
+                ):  # pragma: no cover
+                    return True
     return False
