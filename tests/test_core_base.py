@@ -12,7 +12,7 @@ from cli_result.core import (
     run_script,
     check_examples,
     validate_args,
-    write_experiments,
+    write_examples,
     write_result,
 )
 
@@ -192,7 +192,7 @@ def test_write_experiments(tmp_path: Path):
     shutil.copy(results_path / example_args_fn, test_results_path / example_args_fn)
     assert (tmp_path / "results" / "exmpl_1__args.txt").exists()
 
-    write_experiments(cfg)
+    write_examples(cfg)
     res_files = list(results_path.glob("*.txt"))
     test_results_files = list(test_results_path.glob("*.txt"))
     assert len(res_files) == len(test_results_files)

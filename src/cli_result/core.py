@@ -28,18 +28,23 @@ class Cfg:
 
 def get_examples_names(
     cfg: Cfg = None,
+    examples: str | List[str] | None = None,
 ) -> dict[str, list[Path]]:
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
-    examples_names = defaultdict(list)
+    names_files: Dict[str, List[str]] = defaultdict(list)
     for filename in Path(cfg.examples_path).glob("*.py"):
         example_name = filename.stem.split(cfg.split)[0]
         if example_name == filename.stem:
-            examples_names[example_name].insert(0, filename)
+            names_files[example_name].insert(0, filename)
         else:
-            examples_names[example_name].append(filename)
-    return examples_names
+            names_files[example_name].append(filename)
+    if examples is None:
+        return names_files
+    if isinstance(examples, str):
+        examples = [examples]
+    return {example_name: file_list for example_name, file_list in names_files.items() if example_name in examples}
 
 
 def validate_args(args: StrListStr) -> list[str]:
@@ -114,19 +119,20 @@ def write_result(
         file.write(f"# stdout\n{stdout}# stderr\n{stderr}")
 
 
-def write_experiments(
+def write_examples(
     cfg: Cfg = None,
+    examples: str | List[str] | None = None,
 ) -> None:
     """write experiments results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    experiments = get_examples_names(cfg)
-    for experiment_name, filenames in experiments.items():
-        print(f"Writing results for {experiment_name}")
-        name_args = get_args(experiment_name, cfg)
+    examples = get_examples_names(cfg, examples)
+    for example_name, filenames in examples.items():
+        print(f"Writing results for {example_name}")
+        name_args = get_args(example_name, cfg)
         for name, args in name_args.items():
             write_result(
-                experiment_name,
+                example_name,
                 *run_script(filenames[0], args),
                 name,
                 args,
