@@ -146,7 +146,8 @@ def test_run_script():
     res, err = run_script(filename, "--help")
     expected = read_result(name, "help")
     assert res == expected[0] or usage_equal_with_replace(
-        res, expected[0],
+        res,
+        expected[0],
     )
     assert err == expected[1]
 
@@ -169,6 +170,15 @@ def test_split_usage():
     usage_lines, last_lines = split_usage(res)
     assert usage_lines == expected_res[0]
     assert last_lines == expected_res[1]
+
+    res = "usage: example_1.py [-h]\n:example_1.py: error: unrecognized arguments:"
+    usage_lines, last_lines = split_usage(res)
+    assert usage_lines == res
+    assert last_lines == ""
+
+    # wrong usage
+    text = ""
+    assert split_usage(text) == ("", "")
 
 
 def test_get_prog_name():
