@@ -1,18 +1,20 @@
 import shutil
 import sys
-
 from pathlib import Path
 
 from cli_result.core import (
     Cfg,
-    equal_with_replace,
+    check_examples,
+    usage_equal_with_replace,
     get_args,
     get_examples_names,
+    get_prog_name,
     read_result,
+    replace_prog_name,
     run_script,
-    check_examples,
+    split_usage,
     validate_args,
-    write_experiments,
+    write_examples,
     write_result,
 )
 
@@ -48,6 +50,26 @@ def test_get_examples_names():
     example_1 = list(examples.keys())[0]
     assert example_1 == "example_1"
     assert examples[example_1][0] == Path("examples/example_1.py")
+
+    # filter examples
+    example_name = "example_1"
+    examples = get_examples_names(names=example_name)
+    assert len(examples) == 1
+    example_1 = list(examples.keys())[0]
+    assert example_1 == "example_1"
+    assert examples[example_1][0] == Path("examples/example_1.py")
+
+    example_name_list = ["example_1"]
+    examples = get_examples_names(names=example_name_list)
+    assert len(examples) == 1
+    example_1 = list(examples.keys())[0]
+    assert example_1 == "example_1"
+    assert examples[example_1][0] == Path("examples/example_1.py")
+
+    # wrong name
+    example_name = "example_wrong"
+    examples = get_examples_names(names=example_name)
+    assert len(examples) == 0
 
     # different folder
     cfg = Cfg(examples_path="examples/examples_extra")
@@ -123,8 +145,8 @@ def test_run_script():
 
     res, err = run_script(filename, "--help")
     expected = read_result(name, "help")
-    assert res == expected[0] or equal_with_replace(
-        res, expected[0], name, filename.stem
+    assert res == expected[0] or usage_equal_with_replace(
+        res, expected[0],
     )
     assert err == expected[1]
 
@@ -134,20 +156,70 @@ def test_run_script():
     assert err == ""
 
 
+def test_split_usage():
+    """test split_usage"""
+    res = "usage: example_1.py [-h]\n\nsome text"
+    expected_res = "usage: example_1.py [-h]", "some text"
+    usage_lines, last_lines = split_usage(res)
+    assert usage_lines == expected_res[0]
+    assert last_lines == expected_res[1]
+
+    res = "usage: example_1.py [-h] arg_1\n   arg_2\n\nsome text"
+    expected_res = "usage: example_1.py [-h] arg_1 arg_2", "some text"
+    usage_lines, last_lines = split_usage(res)
+    assert usage_lines == expected_res[0]
+    assert last_lines == expected_res[1]
+
+
+def test_get_prog_name():
+    """test get_prog_name"""
+    usage = "usage: example_1.py [-h] arg_1"
+    expected_res = "example_1.py"
+    assert get_prog_name(usage) == expected_res
+
+    # if expected not usage
+    usage = "not usage: example_1.py [-h] arg_1"
+    expected_res = ""
+    assert get_prog_name(usage) == expected_res
+
+
+def test_replace_prog_name():
+    """test replace_prog_name"""
+    usage = "usage: example_2.py [-h] arg_1"
+    usage_expected = "usage: example_1.py [-h] arg_1"
+    assert replace_prog_name(usage, usage_expected) == usage_expected
+
+    usage = "usage: my_app [-h] arg_1"
+    usage_expected = "usage: example_1.py [-h] arg_1"
+    assert replace_prog_name(usage, usage_expected) == usage_expected
+
+    # expected not usage
+    usage = "usage: my_app [-h] arg_1"
+    usage_expected = "some text"
+    assert replace_prog_name(usage, usage_expected) == usage
+
+
 def test_equal_with_replace():
     """test equal_with_replace"""
-    res = "example_2.py\nsome text"
-    expected_res = "example_1.py\nsome text"
-    assert equal_with_replace(res, expected_res, "example_2", "example_1")
+    res = "usage: example_02.py [-h]\n\nsome text"
+    expected_res = "usage: example_01.py [-h]\n\nsome text"
+    assert usage_equal_with_replace(res, expected_res)
 
-    res = "example_2.py\nsome text\noptional arguments: some options"
-    expected_res = "example_1.py\nsome text\noptions: some options"
+    res = "usage: example_02.py [-h]\n\noptional arguments: some options"
+    expected_res = "usage: example_01.py [-h]\n\noptions: some options"
 
     if VERSION_LESS_10:
-        assert equal_with_replace(res, expected_res, "example_2", "example_1")
+        assert usage_equal_with_replace(res, expected_res)
 
-    # false
-    assert not equal_with_replace("", expected_res, "example_2", "example_1")
+    # # false
+    res = "usage: example_02.py [-h]\n\noptional arguments: wrong options"
+    expected_res = "usage: example_01.py [-h]\n\noptions: some options"
+    if VERSION_LESS_10:
+        assert not usage_equal_with_replace(res, expected_res)
+
+    res = "usage: example_02.py [-h]\n\nnoptions: wrong options"
+    expected_res = "usage: example_01.py [-h]\n\noptions: some options"
+    assert not usage_equal_with_replace(res, expected_res)
 
 
 def test_check_examples():
@@ -166,6 +238,9 @@ def test_check_examples():
     results = check_examples(cfg)
     assert results is None
 
+
+def test_check_examples_errors():
+    """test check_examples with errors"""
     # errors
     cfg = Cfg(examples_path="tests/examples/examples_errors")
     results = check_examples(cfg)
@@ -192,7 +267,7 @@ def test_write_experiments(tmp_path: Path):
     shutil.copy(results_path / example_args_fn, test_results_path / example_args_fn)
     assert (tmp_path / "results" / "exmpl_1__args.txt").exists()
 
-    write_experiments(cfg)
+    write_examples(cfg)
     res_files = list(results_path.glob("*.txt"))
     test_results_files = list(test_results_path.glob("*.txt"))
     assert len(res_files) == len(test_results_files)
