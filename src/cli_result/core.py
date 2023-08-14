@@ -181,7 +181,7 @@ def check_examples(
                         filename.stem,
                         experiment_name,
                     ):
-                        errors[name].append({filename: [res, expected_res]})
+                        errors[name].append({str(filename): [res, expected_res]})
                 if err != expected_err:
                     if not equal_with_replace(
                         res,
@@ -189,7 +189,7 @@ def check_examples(
                         filename.stem,
                         experiment_name,
                     ):
-                        errors[name].append({filename: [err, expected_err]})
+                        errors[name].append({str(filename): [err, expected_err]})
         if errors:
             results[experiment_name] = errors
     return results or None
