@@ -165,11 +165,12 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
 
 def check_examples(
     cfg: Cfg = None,
+    names: str | List[str] | None = None,
 ) -> Dict[str : Dict[str, str]] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples_names(cfg)
+    experiments = get_examples_names(cfg, names)
     results = defaultdict(Dict[str, List[str]])
     for experiment_name, filenames in experiments.items():
         name_args = get_args(experiment_name, cfg)
