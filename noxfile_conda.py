@@ -5,5 +5,5 @@ import nox
 def conda_tests(session):
     args = session.posargs or ["--cov"]
     session.conda_install("--file", "requirements_test.txt")
-    session.install("-e", ".")
+    session.install(".")
     session.run("pytest", *args)
