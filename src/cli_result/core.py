@@ -200,8 +200,10 @@ def split_usage(res: str) -> Tuple[str, str]:
     """Split result to usage (as one line) and other."""
     split = res.split("\n\n", maxsplit=1)
     if len(split) == 1:
-        return res, ""
-    return " ".join(line.strip() for line in split[0].split("\n")), split[1]
+        usage, other = res, ""
+    else:
+        usage, other = split[0], split[1]
+    return " ".join(line.strip() for line in usage.split("\n")), other
 
 
 def get_prog_name(usage: str) -> str:

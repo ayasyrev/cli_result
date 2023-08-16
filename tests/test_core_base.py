@@ -161,20 +161,23 @@ def test_split_usage():
     """test split_usage"""
     res = "usage: example_1.py [-h]\n\nsome text"
     expected_res = "usage: example_1.py [-h]", "some text"
-    usage_lines, last_lines = split_usage(res)
-    assert usage_lines == expected_res[0]
-    assert last_lines == expected_res[1]
+    usage, other = split_usage(res)
+    assert usage == expected_res[0]
+    assert other == expected_res[1]
 
     res = "usage: example_1.py [-h] arg_1\n   arg_2\n\nsome text"
-    expected_res = "usage: example_1.py [-h] arg_1 arg_2", "some text"
-    usage_lines, last_lines = split_usage(res)
-    assert usage_lines == expected_res[0]
-    assert last_lines == expected_res[1]
+    expected_usage = "usage: example_1.py [-h] arg_1 arg_2"
+    expected_other = "some text"
+    usage, other = split_usage(res)
+    assert usage == expected_usage
+    assert other == expected_other
 
-    res = "usage: example_1.py [-h]\n:example_1.py: error: unrecognized arguments:"
-    usage_lines, last_lines = split_usage(res)
-    assert usage_lines == res
-    assert last_lines == ""
+    # no \n\n - error case/ all text is usage - remove \n
+    res = "usage: example_1.py [-h] arg_1\n   arg_2\nsome text"
+    # res = "usage: example_1.py [-h]\n:example_1.py: error: unrecognized arguments:"
+    usage, other = split_usage(res)
+    assert usage == expected_usage + " some text"
+    assert other == ""
 
     # wrong usage
     text = ""
