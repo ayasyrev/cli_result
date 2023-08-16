@@ -47,24 +47,24 @@ def test_get_examples_names():
     """test get_examples_names"""
     examples = get_examples_names()
     assert len(examples) == 1
-    example_1 = list(examples.keys())[0]
-    assert example_1 == "example_1"
-    assert examples[example_1][0] == Path("examples/example_1.py")
+    example_1 = examples[0]
+    assert example_1[0] == "example_1"
+    assert example_1[1][0] == Path("examples/example_1.py")
 
     # filter examples
     example_name = "example_1"
     examples = get_examples_names(names=example_name)
     assert len(examples) == 1
-    example_1 = list(examples.keys())[0]
-    assert example_1 == "example_1"
-    assert examples[example_1][0] == Path("examples/example_1.py")
+    example_1 = examples[0]
+    assert example_1[0] == "example_1"
+    assert example_1[1][0] == Path("examples/example_1.py")
 
     example_name_list = ["example_1"]
     examples = get_examples_names(names=example_name_list)
     assert len(examples) == 1
-    example_1 = list(examples.keys())[0]
-    assert example_1 == "example_1"
-    assert examples[example_1][0] == Path("examples/example_1.py")
+    example_1 = examples[0]
+    assert example_1[0] == "example_1"
+    assert example_1[1][0] == Path("examples/example_1.py")
 
     # wrong name
     example_name = "example_wrong"
@@ -73,12 +73,12 @@ def test_get_examples_names():
 
     # different folder
     cfg = Cfg(examples_path="examples/examples_extra")
-    examples = get_examples_names(cfg)
+    examples = get_examples_names(cfg=cfg)
     assert len(examples) == 1
-    example_1 = list(examples.keys())[0]
-    assert example_1 == "example_extra_1"
-    assert examples[example_1][0] == Path("examples/examples_extra/example_extra_1.py")
-    assert len(examples[example_1]) == 2
+    example_1 = examples[0]
+    assert example_1[0] == "example_extra_1"
+    assert example_1[1][0] == Path("examples/examples_extra/example_extra_1.py")
+    assert len(example_1[1]) == 2
 
 
 def test_get_args():
@@ -133,9 +133,10 @@ def test_read_result():
 def test_run_script():
     """test run_script"""
     examples = get_examples_names()
-    name = list(examples.keys())[0]
+    example = examples[0]
+    name = example[0]
     assert name == "example_1"
-    filename = examples[name][0]
+    filename = example[1][0]
     assert Path(filename).exists()
 
     res, err = run_script(filename)
@@ -243,12 +244,12 @@ def test_check_examples():
 
     # default config
     cfg = Cfg()
-    results = check_examples(cfg)
+    results = check_examples(cfg=cfg)
     assert results is None
 
     # extra
     cfg = Cfg(examples_path="examples/examples_extra")
-    results = check_examples(cfg)
+    results = check_examples(cfg=cfg)
     assert results is None
 
 
@@ -256,7 +257,7 @@ def test_check_examples_errors():
     """test check_examples with errors"""
     # errors
     cfg = Cfg(examples_path="tests/examples/examples_errors")
-    results = check_examples(cfg)
+    results = check_examples(cfg=cfg)
     assert results
 
 
