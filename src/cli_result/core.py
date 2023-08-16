@@ -27,9 +27,9 @@ class Cfg:
 
 
 def get_examples_names(
-    cfg: Cfg = None,
     names: str | List[str] | None = None,
-) -> dict[str, list[Path]]:
+    cfg: Cfg = None,
+) -> List[Tuple[str, list[Path]]]:
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
@@ -40,15 +40,15 @@ def get_examples_names(
             names_files[example_name].insert(0, filename)
         else:
             names_files[example_name].append(filename)
-    if names is None:
-        return names_files
-    if isinstance(names, str):
-        names = [names]
-    return {
-        example_name: file_list
-        for example_name, file_list in names_files.items()
-        if example_name in names
-    }
+    if names is not None:
+        if isinstance(names, str):
+            names = [names]
+        names_files = {
+            example_name: file_list
+            for example_name, file_list in names_files.items()
+            if example_name in names
+        }
+    return list((name, files) for name, files in names_files.items())
 
 
 def validate_args(args: StrListStr) -> list[str]:
@@ -130,8 +130,8 @@ def write_examples(
     """write experiments results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    examples = get_examples_names(cfg, examples)
-    for example_name, filenames in examples.items():
+    examples = get_examples_names(cfg=cfg, names=examples)
+    for example_name, filenames in examples:
         print(f"Writing results for {example_name}")
         name_args = get_args(example_name, cfg)
         for name, args in name_args.items():
@@ -164,36 +164,52 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
 
 
 def check_examples(
-    cfg: Cfg = None,
     names: str | List[str] | None = None,
-) -> Dict[str : Dict[str, str]] | None:
+    cfg: Cfg = None,
+) -> List[Tuple[str, List[str]]] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples_names(cfg, names)
+    experiments = get_examples_names(cfg=cfg, names=names)
     results = defaultdict(Dict[str, List[str]])
-    for experiment_name, filenames in experiments.items():
-        name_args = get_args(experiment_name, cfg)
-        errors = defaultdict(list)
-        for name, args in name_args.items():
-            for filename in filenames:
-                res, err = run_script(filename, args)
-                expected_res, expected_err = read_result(experiment_name, name, cfg)
-                if res != expected_res:
-                    if not usage_equal_with_replace(
-                        res,
-                        expected_res,
-                    ):
-                        errors[name].append({str(filename): [res, expected_res]})
-                if err != expected_err:
-                    if not usage_equal_with_replace(
-                        err,
-                        expected_err,
-                    ):
-                        errors[name].append({str(filename): [err, expected_err]})
+    for experiment_name, file_list in experiments:
+        errors = run_check_example(experiment_name, file_list, cfg=cfg)
         if errors:
             results[experiment_name] = errors
-    return results or None
+    if results:
+        return list((name, errors) for name, errors in results.items())
+    return None
+
+
+def run_check_example(
+    experiment_name: str,
+    file_list: List[Path],
+    cfg: Cfg | None,
+) -> List[Tuple[str, str]]:
+    """Run and check example"""
+    if cfg is None:
+        cfg = Cfg()
+    name_args = get_args(experiment_name, cfg)
+    errors = defaultdict(list)
+    for name, args in name_args.items():
+        for file in file_list:
+            res, err = run_script(file, args)
+            expected_res, expected_err = read_result(experiment_name, name, cfg)
+            if res != expected_res:
+                if not usage_equal_with_replace(
+                    res,
+                    expected_res,
+                ):
+                    errors[name].append((str(file), [res, expected_res]))
+            if err != expected_err:
+                if not usage_equal_with_replace(
+                    err,
+                    expected_err,
+                ):
+                    errors[name].append((str(file), [err, expected_err]))
+    if errors:
+        return list((name, err_list) for name, err_list in errors.items())
+    return None
 
 
 def split_usage(res: str) -> Tuple[str, str]:
