@@ -7,7 +7,7 @@ from cli_result.core import (
     check_examples,
     usage_equal_with_replace,
     get_args,
-    get_examples_names,
+    get_examples,
     get_prog_name,
     read_result,
     replace_prog_name,
@@ -45,7 +45,7 @@ def test_validate_args():
 
 def test_get_examples_names():
     """test get_examples_names"""
-    examples = get_examples_names()
+    examples = get_examples()
     assert len(examples) == 1
     example_1 = examples[0]
     assert example_1[0] == "example_1"
@@ -53,14 +53,14 @@ def test_get_examples_names():
 
     # filter examples
     example_name = "example_1"
-    examples = get_examples_names(names=example_name)
+    examples = get_examples(names=example_name)
     assert len(examples) == 1
     example_1 = examples[0]
     assert example_1[0] == "example_1"
     assert example_1[1][0] == Path("examples/example_1.py")
 
     example_name_list = ["example_1"]
-    examples = get_examples_names(names=example_name_list)
+    examples = get_examples(names=example_name_list)
     assert len(examples) == 1
     example_1 = examples[0]
     assert example_1[0] == "example_1"
@@ -68,12 +68,12 @@ def test_get_examples_names():
 
     # wrong name
     example_name = "example_wrong"
-    examples = get_examples_names(names=example_name)
+    examples = get_examples(names=example_name)
     assert len(examples) == 0
 
     # different folder
     cfg = Cfg(examples_path="examples/examples_extra")
-    examples = get_examples_names(cfg=cfg)
+    examples = get_examples(cfg=cfg)
     assert len(examples) == 1
     example_1 = examples[0]
     assert example_1[0] == "example_extra_1"
@@ -132,7 +132,7 @@ def test_read_result():
 
 def test_run_script():
     """test run_script"""
-    examples = get_examples_names()
+    examples = get_examples()
     example = examples[0]
     name = example[0]
     assert name == "example_1"

@@ -26,7 +26,7 @@ class Cfg:
     split: str = "__"
 
 
-def get_examples_names(
+def get_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
 ) -> List[Tuple[str, list[Path]]]:
@@ -130,7 +130,7 @@ def write_examples(
     """write experiments results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    examples = get_examples_names(cfg=cfg, names=examples)
+    examples = get_examples(cfg=cfg, names=examples)
     for example_name, filenames in examples:
         print(f"Writing results for {example_name}")
         name_args = get_args(example_name, cfg)
@@ -170,7 +170,7 @@ def check_examples(
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples_names(cfg=cfg, names=names)
+    experiments = get_examples(cfg=cfg, names=names)
     results = defaultdict(Dict[str, List[str]])
     for experiment_name, file_list in experiments:
         errors = run_check_example(experiment_name, file_list, cfg=cfg)
