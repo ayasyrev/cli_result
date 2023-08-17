@@ -1,0 +1,10 @@
+# result for run example_2 with args: a, -h
+# stdout
+usage: example_2.py a [-h] bar
+
+positional arguments:
+  bar         bar help
+
+options:
+  -h, --help  show this help message and exit
+# stderr

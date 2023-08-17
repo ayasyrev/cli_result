@@ -1,6 +1,7 @@
 """ Test for run scripts and compare output with expected results.
 """
 from __future__ import annotations
+import re
 import sys
 
 import subprocess
@@ -26,7 +27,7 @@ class Cfg:
     split: str = "__"
 
 
-def get_examples_names(
+def get_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
 ) -> List[Tuple[str, list[Path]]]:
@@ -124,13 +125,13 @@ def write_result(
 
 
 def write_examples(
-    cfg: Cfg = None,
     examples: str | List[str] | None = None,
+    cfg: Cfg = None,
 ) -> None:
     """write experiments results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    examples = get_examples_names(cfg=cfg, names=examples)
+    examples = get_examples(cfg=cfg, names=examples)
     for example_name, filenames in examples:
         print(f"Writing results for {example_name}")
         name_args = get_args(example_name, cfg)
@@ -170,7 +171,7 @@ def check_examples(
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples_names(cfg=cfg, names=names)
+    experiments = get_examples(cfg=cfg, names=names)
     results = defaultdict(Dict[str, List[str]])
     for experiment_name, file_list in experiments:
         errors = run_check_example(experiment_name, file_list, cfg=cfg)
@@ -188,7 +189,7 @@ def run_check_example(
 ) -> List[Tuple[str, str]]:
     """Run and check example"""
     if cfg is None:
-        cfg = Cfg()
+        cfg = Cfg()  # pragma: no cover  checked from run_examples
     name_args = get_args(experiment_name, cfg)
     errors = defaultdict(list)
     for name, args in name_args.items():
@@ -245,12 +246,24 @@ def usage_equal_with_replace(
         usage, other = split_usage(res)
         usage_expected, other_expected = split_usage(expected_res)
         usage_replaced = replace_prog_name(usage, usage_expected)
-        if usage_replaced == usage_expected:
+        if usage_replaced != usage_expected:
+            return replace_py_less310(usage_replaced, usage_expected)
+        else:
             if other == other_expected:
                 return True
-            if ARGPARSE_OLD:  # pragma: no cover
-                if (
-                    other.replace("optional arguments", "options") == other_expected
-                ):  # pragma: no cover
-                    return True
+            if (
+                ARGPARSE_OLD and replace_py_less310(other, other_expected)
+            ):  # pragma: no cover
+                return True
+    return False
+
+
+def replace_py_less310(text: str, expected: str) -> bool:
+    """Replace text used in python less 3.10"""
+    replaced = text.replace("optional arguments", "options")
+    if replaced == expected:
+        return True
+    expected_replaced = re.sub(r"argument \{(.*)\}: ", "", expected)
+    if replaced == expected_replaced:
+        return True
     return False

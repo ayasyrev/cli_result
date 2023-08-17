@@ -1,0 +1,5 @@
+# result for run example_2 with args: a, string
+# stdout
+# stderr
+usage: example_2.py a [-h] bar
+example_2.py a: error: argument bar: invalid int value: 'string'

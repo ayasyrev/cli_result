@@ -4,15 +4,15 @@ from pathlib import Path
 
 from cli_result.core import (
     Cfg,
-    check_examples,
-    usage_equal_with_replace,
     get_args,
-    get_examples_names,
+    get_examples,
     get_prog_name,
     read_result,
     replace_prog_name,
+    replace_py_less310,
     run_script,
     split_usage,
+    usage_equal_with_replace,
     validate_args,
     write_examples,
     write_result,
@@ -45,35 +45,37 @@ def test_validate_args():
 
 def test_get_examples_names():
     """test get_examples_names"""
-    examples = get_examples_names()
-    assert len(examples) == 1
+    examples = get_examples()
+    assert len(examples) == 2
     example_1 = examples[0]
     assert example_1[0] == "example_1"
     assert example_1[1][0] == Path("examples/example_1.py")
+
+    assert examples[1][0] == "example_2"
 
     # filter examples
     example_name = "example_1"
-    examples = get_examples_names(names=example_name)
+    examples = get_examples(names=example_name)
     assert len(examples) == 1
     example_1 = examples[0]
     assert example_1[0] == "example_1"
     assert example_1[1][0] == Path("examples/example_1.py")
 
-    example_name_list = ["example_1"]
-    examples = get_examples_names(names=example_name_list)
+    example_name_list = ["example_2"]
+    examples = get_examples(names=example_name_list)
     assert len(examples) == 1
     example_1 = examples[0]
-    assert example_1[0] == "example_1"
-    assert example_1[1][0] == Path("examples/example_1.py")
+    assert example_1[0] == "example_2"
+    assert example_1[1][0] == Path("examples/example_2.py")
 
     # wrong name
     example_name = "example_wrong"
-    examples = get_examples_names(names=example_name)
+    examples = get_examples(names=example_name)
     assert len(examples) == 0
 
     # different folder
     cfg = Cfg(examples_path="examples/examples_extra")
-    examples = get_examples_names(cfg=cfg)
+    examples = get_examples(cfg=cfg)
     assert len(examples) == 1
     example_1 = examples[0]
     assert example_1[0] == "example_extra_1"
@@ -132,7 +134,7 @@ def test_read_result():
 
 def test_run_script():
     """test run_script"""
-    examples = get_examples_names()
+    examples = get_examples()
     example = examples[0]
     name = example[0]
     assert name == "example_1"
@@ -236,29 +238,15 @@ def test_equal_with_replace():
     assert not usage_equal_with_replace(res, expected_res)
 
 
-def test_check_examples():
-    """test check_examples"""
-    # no args
-    results = check_examples()
-    assert results is None
+def test_replace_py_less310():
+    """test replace_py_less310"""
+    res = "usage: example_01.py [-h]\n\noptional arguments: some options"
+    expected_res = "usage: example_01.py [-h]\n\noptions: some options"
+    assert replace_py_less310(res, expected_res)
 
-    # default config
-    cfg = Cfg()
-    results = check_examples(cfg=cfg)
-    assert results is None
-
-    # extra
-    cfg = Cfg(examples_path="examples/examples_extra")
-    results = check_examples(cfg=cfg)
-    assert results is None
-
-
-def test_check_examples_errors():
-    """test check_examples with errors"""
-    # errors
-    cfg = Cfg(examples_path="tests/examples/examples_errors")
-    results = check_examples(cfg=cfg)
-    assert results
+    res = "error: invalid choice: a"
+    expected_res = "error: argument {some_arg}: invalid choice: a"
+    assert replace_py_less310(res, expected_res)
 
 
 def test_write_experiments(tmp_path: Path):
@@ -281,7 +269,7 @@ def test_write_experiments(tmp_path: Path):
     shutil.copy(results_path / example_args_fn, test_results_path / example_args_fn)
     assert (tmp_path / "results" / "exmpl_1__args.txt").exists()
 
-    write_examples(cfg)
+    write_examples(cfg=cfg)
     res_files = list(results_path.glob("*.txt"))
     test_results_files = list(test_results_path.glob("*.txt"))
     assert len(res_files) == len(test_results_files)
