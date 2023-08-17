@@ -1,0 +1,20 @@
+# args for run
+# name: args - space delimited
+help: --help
+no_args:
+empty_str: ""
+short_flag_help: -h
+
+positional: cl_arg
+optional: --echo cl_arg
+
+# commands
+cmd_a: a bar_arg
+cmd_a_help: a -h
+cmd_a_err: a string
+
+cmd_b: b
+cmd_b_opt: b --baz X
+cmd_b_opt_err --baz AA
+cmd_b_help: b -h
+cmd_b_err: b string

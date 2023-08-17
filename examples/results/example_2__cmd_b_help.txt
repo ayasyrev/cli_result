@@ -1,0 +1,8 @@
+# result for run example_2 with args: b, -h
+# stdout
+usage: example_2.py b [-h] [--baz {X,Y,Z}]
+
+options:
+  -h, --help     show this help message and exit
+  --baz {X,Y,Z}  baz help
+# stderr

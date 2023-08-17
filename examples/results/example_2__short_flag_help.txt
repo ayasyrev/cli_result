@@ -1,0 +1,13 @@
+# result for run example_2 with args: -h
+# stdout
+usage: example_2.py [-h] [--echo ECHO] {a,b} ...
+
+positional arguments:
+  {a,b}        sub-command help
+    a          a help
+    b          b help
+
+options:
+  -h, --help   show this help message and exit
+  --echo ECHO
+# stderr
