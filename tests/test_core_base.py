@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from cli_result.core import (
+    Args,
     Cfg,
     get_args,
     get_examples,
@@ -88,18 +89,18 @@ def test_get_args():
     """test get_args"""
     # args file not exists
     args = get_args("wrong_name")
-    assert args == {}
+    assert args == []
 
     # base
     args = get_args("example_1")
-    expected_res = {
-        "help": ["--help"],
-        "no_args": [],
-        "empty_str": ['""'],
-        "short_flag_help": ["-h"],
-        "positional": ["cl_arg"],
-        "optional": ["--echo", "cl_arg"],
-    }
+    expected_res = [
+        Args("help", ["--help"]),
+        Args("no_args", []),
+        Args("empty_str", ['""']),
+        Args("short_flag_help", ["-h"]),
+        Args("positional", ["cl_arg"]),
+        Args("optional", ["--echo", "cl_arg"]),
+    ]
     assert args == expected_res
 
     # different folder

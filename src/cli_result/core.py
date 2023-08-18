@@ -1,14 +1,14 @@
 """ Test for run scripts and compare output with expected results.
 """
 from __future__ import annotations
-import re
-import sys
 
+import re
 import subprocess
-from collections import defaultdict, namedtuple
+import sys
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, NamedTuple, Tuple, Union
 
 StrListStr = Union[str, List[str], None]
 PathStr = Union[str, Path, None]
@@ -27,13 +27,20 @@ class Cfg:
     split: str = "__"
 
 
-Example = namedtuple("Example", "name files")
+class Example(NamedTuple):
+    name: str
+    files: list[Path]
+
+
+class Args(NamedTuple):
+    name: str
+    list: list[str]
 
 
 def get_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
-) -> List[Tuple[str, list[Path]]]:
+) -> List[Example]:
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
@@ -81,7 +88,7 @@ def run_script(filename: str, args: StrListStr = None) -> tuple[str, str]:
 def get_args(
     name: str,
     cfg: Cfg = None,
-) -> dict[str, str]:
+) -> list[Args]:
     """get script args from file"""
     if cfg is None:
         cfg = Cfg()
@@ -91,14 +98,16 @@ def get_args(
         f"{name}{cfg.split}{cfg.args_filename_suffix}.txt",
     )
     if not args_filename.exists():
-        return {}
+        return []
     with open(args_filename, "r", encoding="utf-8") as file:
         lines = [
             line.split("#", maxsplit=1)[0].rstrip().split(":", maxsplit=1)
             for line in file.readlines()
             if line != "\n" and not line.startswith("#")
         ]
-    return {item[0]: item[1].split() if len(item) == 2 else None for item in lines}
+    return [
+        Args(item[0], item[1].split() if len(item) == 2 else None) for item in lines
+    ]
 
 
 def write_result(
@@ -137,13 +146,13 @@ def write_examples(
     examples = get_examples(cfg=cfg, names=examples)
     for example_name, filenames in examples:
         print(f"Writing results for {example_name}")
-        name_args = get_args(example_name, cfg)
-        for name, args in name_args.items():
+        args_list = get_args(example_name, cfg)
+        for args in args_list:
             write_result(
                 example_name,
-                *run_script(filenames[0], args),
-                name,
-                args,
+                *run_script(filenames[0], args.list),
+                args.name,
+                args.list,
                 cfg,
             )
 
@@ -193,24 +202,24 @@ def run_check_example(
     """Run and check example"""
     if cfg is None:
         cfg = Cfg()  # pragma: no cover  checked from run_examples
-    name_args = get_args(example_name, cfg)
+    args_list = get_args(example_name, cfg)
     errors = defaultdict(list)
-    for name, args in name_args.items():
+    for args in args_list:
         for file in file_list:
-            res, err = run_script(file, args)
-            expected_res, expected_err = read_result(example_name, name, cfg)
+            res, err = run_script(file, args.list)
+            expected_res, expected_err = read_result(example_name, args.name, cfg)
             if res != expected_res:
                 if not usage_equal_with_replace(
                     res,
                     expected_res,
                 ):
-                    errors[name].append((str(file), [res, expected_res]))
+                    errors[args.name].append((str(file), [res, expected_res]))
             if err != expected_err:
                 if not usage_equal_with_replace(
                     err,
                     expected_err,
                 ):
-                    errors[name].append((str(file), [err, expected_err]))
+                    errors[args.name].append((str(file), [err, expected_err]))
     if errors:
         return list((name, err_list) for name, err_list in errors.items())
     return None
