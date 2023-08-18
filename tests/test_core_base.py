@@ -251,8 +251,8 @@ def test_replace_py_less310():
     assert replace_py_less310(res, expected_res)
 
 
-def test_write_experiments(tmp_path: Path):
-    """test write_experiments"""
+def test_write_examples(tmp_path: Path):
+    """test write_examples"""
     cfg = Cfg(examples_path=tmp_path)
 
     examples_path = Path("tests/examples")
@@ -260,7 +260,7 @@ def test_write_experiments(tmp_path: Path):
     example_fn = "exmpl_1.py"
     example_args_fn = "exmpl_1__args.txt"
 
-    # create tmp example folder w/ experiment
+    # create tmp example folder w/ examples
     test_example = tmp_path / example_fn
     shutil.copy(examples_path / example_fn, test_example)
     assert test_example.exists()

@@ -5,7 +5,7 @@ import re
 import sys
 
 import subprocess
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
@@ -25,6 +25,9 @@ class Cfg:
     results_path: str = "results"
     args_filename_suffix: str = "args"
     split: str = "__"
+
+
+Example = namedtuple("Example", "name files")
 
 
 def get_examples(
@@ -49,7 +52,7 @@ def get_examples(
             for example_name, file_list in file_names.items()
             if example_name in names
         }
-    return list((name, files) for name, files in file_names.items())
+    return list(Example(name, files) for name, files in file_names.items())
 
 
 def validate_args(args: StrListStr) -> list[str]:
@@ -128,7 +131,7 @@ def write_examples(
     examples: str | List[str] | None = None,
     cfg: Cfg = None,
 ) -> None:
-    """write experiments results to file"""
+    """write examples results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
     examples = get_examples(cfg=cfg, names=examples)
@@ -171,31 +174,31 @@ def check_examples(
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples(cfg=cfg, names=names)
+    examples = get_examples(cfg=cfg, names=names)
     results = defaultdict(Dict[str, List[str]])
-    for experiment_name, file_list in experiments:
-        errors = run_check_example(experiment_name, file_list, cfg=cfg)
+    for example_name, file_list in examples:
+        errors = run_check_example(example_name, file_list, cfg=cfg)
         if errors:
-            results[experiment_name] = errors
+            results[example_name] = errors
     if results:
         return list((name, errors) for name, errors in results.items())
     return None
 
 
 def run_check_example(
-    experiment_name: str,
+    example_name: str,
     file_list: List[Path],
     cfg: Cfg | None = None,
 ) -> List[Tuple[str, str]]:
     """Run and check example"""
     if cfg is None:
         cfg = Cfg()  # pragma: no cover  checked from run_examples
-    name_args = get_args(experiment_name, cfg)
+    name_args = get_args(example_name, cfg)
     errors = defaultdict(list)
     for name, args in name_args.items():
         for file in file_list:
             res, err = run_script(file, args)
-            expected_res, expected_err = read_result(experiment_name, name, cfg)
+            expected_res, expected_err = read_result(example_name, name, cfg)
             if res != expected_res:
                 if not usage_equal_with_replace(
                     res,
@@ -251,8 +254,8 @@ def usage_equal_with_replace(
         else:
             if other == other_expected:
                 return True
-            if (
-                ARGPARSE_OLD and replace_py_less310(other, other_expected)
+            if ARGPARSE_OLD and replace_py_less310(
+                other, other_expected
             ):  # pragma: no cover
                 return True
     return False
