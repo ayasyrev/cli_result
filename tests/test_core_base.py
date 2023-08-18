@@ -5,6 +5,7 @@ from pathlib import Path
 from cli_result.core import (
     Args,
     Cfg,
+    Result,
     get_args,
     get_examples,
     get_prog_name,
@@ -288,26 +289,23 @@ def test_write_examples(tmp_path: Path):
 
     # single result
     example_name = "example_name"
-    arg_name = "arg_name"
-    args = ["arg1", "arg2"]
-    write_result(example_name, "res", "err", arg_name, args, cfg)
-    result_file = test_results_path / f"{example_name}{cfg.split}{arg_name}.txt"
+    args = Args("arg_name", ["arg1", "arg2"])
+    write_result(example_name, Result("res", "err"), args, cfg)
+    result_file = test_results_path / f"{example_name}{cfg.split}{args.name}.txt"
     assert result_file.exists()
-    res, err = read_result(example_name, arg_name, cfg)
-    assert res == "res"
-    assert err == "err"
+    result = read_result(example_name, args.name, cfg)
+    assert result == ("res", "err")
     with open(result_file, "r", encoding="utf-8") as fh:
         first_line = fh.readline()
     assert first_line.split("args: ", maxsplit=1)[1] == "arg1, arg2\n"
 
     # no args
-    arg_name = "no_arg"
-    write_result(example_name, "res", "err", arg_name, cfg=cfg)
-    result_file = test_results_path / f"{example_name}{cfg.split}{arg_name}.txt"
+    args = Args("no_arg", [])
+    write_result(example_name, Result("res", "err"), args, cfg=cfg)
+    result_file = test_results_path / f"{example_name}{cfg.split}{args.name}.txt"
     assert result_file.exists()
-    res, err = read_result(example_name, arg_name, cfg)
-    assert res == "res"
-    assert err == "err"
+    result = read_result(example_name, args.name, cfg)
+    assert result == ("res", "err")
     with open(result_file, "r", encoding="utf-8") as fh:
         first_line = fh.readline()
     assert first_line.split("args: ", maxsplit=1)[1].rstrip() == ""

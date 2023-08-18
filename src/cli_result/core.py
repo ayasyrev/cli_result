@@ -1,12 +1,12 @@
 """ Test for run scripts and compare output with expected results.
 """
 from __future__ import annotations
+from dataclasses import dataclass
 
 import re
 import subprocess
 import sys
 from collections import defaultdict
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, NamedTuple, Tuple, Union
 
@@ -19,7 +19,7 @@ ARGPARSE_OLD = sys.version_info.minor < 10
 
 @dataclass
 class Cfg:
-    """base config for cli_result"""
+    """Base config for cli_result"""
 
     examples_path: str = "examples"
     results_path: str = "results"
@@ -28,13 +28,24 @@ class Cfg:
 
 
 class Example(NamedTuple):
+    """Example - name and list of files"""
+
     name: str
     files: list[Path]
 
 
 class Args(NamedTuple):
+    """Args - name and list of arguments"""
+
     name: str
     list: list[str]
+
+
+class Result(NamedTuple):
+    """Result - stdout and stderr"""
+
+    stdout: str
+    stderr: str
 
 
 def get_examples(
@@ -71,18 +82,18 @@ def validate_args(args: StrListStr) -> list[str]:
     return args
 
 
-def run_script(filename: str, args: StrListStr = None) -> tuple[str, str]:
+def run_script(filename: str, args: StrListStr = None) -> Result:
     """run script"""
     args = validate_args(args)
     if not Path(filename).exists():
-        return "", ""
+        return Result("", "")
     res = subprocess.run(
         ["python", filename, *args],
         capture_output=True,
         check=False,
     )
 
-    return res.stdout.decode("utf-8"), res.stderr.decode("utf-8")
+    return Result(res.stdout.decode("utf-8"), res.stderr.decode("utf-8"))
 
 
 def get_args(
@@ -112,28 +123,22 @@ def get_args(
 
 def write_result(
     name: str,
-    stdout: str,
-    stderr: str,
-    arg_name: str,
-    args: list[str] | None = None,
+    result: Result,
+    args: Args,
     cfg: Cfg = None,
 ) -> None:
     """write result to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    if args is None:
-        args = []
     result_filename = Path(
         cfg.examples_path,
         cfg.results_path,
-        f"{name}{cfg.split}{arg_name}.txt",
+        f"{name}{cfg.split}{args.name}.txt",
     )
-    # if not result_filename.parent.exists():
-    #     result_filename.parent.mkdir(parents=True)
-    print(f"  {name}: {args}, filename: {result_filename}")
+    print(f"  {name}: {args.name}, filename: {result_filename}")
     with open(result_filename, "w", encoding="utf-8") as file:
-        file.write(f"# result for run {name} with args: {', '.join(args)}\n")
-        file.write(f"# stdout\n{stdout}# stderr\n{stderr}")
+        file.write(f"# result for run {name} with args: {', '.join(args.list)}\n")
+        file.write(f"# stdout\n{result.stdout}# stderr\n{result.stderr}")
 
 
 def write_examples(
@@ -150,14 +155,13 @@ def write_examples(
         for args in args_list:
             write_result(
                 example_name,
-                *run_script(filenames[0], args.list),
-                args.name,
-                args.list,
+                run_script(filenames[0], args.list),
+                args,
                 cfg,
             )
 
 
-def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
+def read_result(name: str, arg_name: str, cfg: Cfg = None) -> Result:
     """read result from file, return stdout and stderr.
     If not found, return empty strings
     """
@@ -169,11 +173,11 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
         f"{name}{cfg.split}{arg_name}.txt",
     )
     if not result_filename.exists():
-        return "", ""
+        return Result("", "")
     with open(result_filename, "r", encoding="utf-8") as file:
         text = file.read()
     res, err = text.split("# stdout\n")[1].split("# stderr\n")
-    return res, err
+    return Result(res, err)
 
 
 def check_examples(
