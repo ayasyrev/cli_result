@@ -34,22 +34,22 @@ def get_examples(
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
-    names_files: Dict[str, List[str]] = defaultdict(list)
+    file_names: Dict[str, List[str]] = defaultdict(list)
     for filename in Path(cfg.examples_path).glob("*.py"):
         example_name = filename.stem.split(cfg.split)[0]
         if example_name == filename.stem:
-            names_files[example_name].insert(0, filename)
+            file_names[example_name].insert(0, filename)
         else:
-            names_files[example_name].append(filename)
+            file_names[example_name].append(filename)
     if names is not None:
         if isinstance(names, str):
             names = [names]
-        names_files = {
+        file_names = {
             example_name: file_list
-            for example_name, file_list in names_files.items()
+            for example_name, file_list in file_names.items()
             if example_name in names
         }
-    return list((name, files) for name, files in names_files.items())
+    return list((name, files) for name, files in file_names.items())
 
 
 def validate_args(args: StrListStr) -> list[str]:

@@ -47,6 +47,7 @@ def test_get_examples_names():
     """test get_examples_names"""
     examples = get_examples()
     assert len(examples) == 2
+    examples.sort(key=lambda x: x[0])
     example_1 = examples[0]
     assert example_1[0] == "example_1"
     assert example_1[1][0] == Path("examples/example_1.py")
