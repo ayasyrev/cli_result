@@ -259,9 +259,82 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Cli_results
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
         Cli_results
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    Install
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    Examples
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-script" class="md-nav__link">
+    Run script
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-one-example" class="md-nav__link">
+    Check one example.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-all-examples" class="md-nav__link">
+    Check all examples.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-errors" class="md-nav__link">
+    Check errors
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -287,6 +360,63 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    Install
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    Examples
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-script" class="md-nav__link">
+    Run script
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-one-example" class="md-nav__link">
+    Check one example.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-all-examples" class="md-nav__link">
+    Check all examples.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#check-errors" class="md-nav__link">
+    Check errors
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -308,25 +438,126 @@
 <p><a href="https://pypi.org/project/cli_result/"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/cli_result" /></a>
 <a href="https://pypi.org/project/cli_result/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/cli_result?color=blue" /></a><br />
 <a href="https://github.com/ayasyrev/cli_result/actions?workflow=Tests"><img alt="Tests" src="https://github.com/ayasyrev/cli_result/workflows/Tests/badge.svg" /></a>  <a href="https://codecov.io/gh/ayasyrev/cli_result"><img alt="Codecov" src="https://codecov.io/gh/ayasyrev/cli_result/branch/main/graph/badge.svg" /></a>  </p>
-<h1 id="install">Install</h1>
+<h2 id="install">Install</h2>
 <p>Install from pypi:  </p>
 <p><code>pip install cli_result</code></p>
 <p>Or install from github repo:</p>
 <p><code>pip install git+https://github.com/ayasyrev/cli_result.git</code></p>
-<h1 id="usage">Usage.</h1>
+<h2 id="usage">Usage.</h2>
 <p>Main purpose test results of examples run. We run all scripts in examples folder and compare results with expected results. Check it at different python versions.<br />
 So we can be sure that all scripts work and has similar behaviors in different python versions.<br />
 It's not suitable to run script that supposed to run for a long time or resources are limited.<br />
 But it's good for quick tests, to check configs and shorts demos (examples).</p>
 <p>Put your script in examples folder and expected results in results folder.<br />
 Arguments for tests at file name same as script name + <code>__args.txt.</code></p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result.core</span> <span class="kn">import</span> <span class="n">check_examples</span><span class="p">,</span> <span class="n">Cfg</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span> <span class="n">check_examples</span><span class="p">,</span> <span class="n">Cfg</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">()</span>
 </code></pre></div>
-<p>This run all scripts in examples folder with arguments from <code>__args.txt.</code> file and compare with results at <code>results/</code> folder.  </p>
+<p>This run all scripts in examples folder with arguments from <code>__args.txt</code> file and compare with results at <code>results/</code> folder.  </p>
 <div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
 </code></pre></div>
+<h2 id="examples">Examples</h2>
+<p>We can change examples folder.</p>
+<div class="highlight"><pre><span></span><code><span class="n">cfg</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">examples_path</span><span class="o">=</span><span class="s2">&quot;../examples/examples_extra/&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Check examples at folder:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span>  <span class="n">get_examples</span>
+
+<span class="n">examples</span> <span class="o">=</span> <span class="n">get_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</code></pre></div>
+<p>We got list of examples as tuple example_name, files</p>
+<div class="highlight"><pre><span></span><code><span class="n">example</span> <span class="o">=</span> <span class="n">examples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># name</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="c1"># files</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    example_extra_1
+    ../examples/examples_extra/example_extra_1.py
+    ../examples/examples_extra/example_extra_1__alter.py
+
+    </pre>
+</details>
+
+<h2 id="run-script">Run script</h2>
+<p>We can run script and look at result.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span>  <span class="n">run_script</span>
+
+<span class="n">res</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">run_script</span><span class="p">(</span>
+    <span class="n">filename</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">args</span><span class="o">=</span><span class="s2">&quot;--help&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    usage: example_extra_1.py [-h] [--echo ECHO]
+
+    options:
+      -h, --help   show this help message and exit
+      --echo ECHO
+
+
+    </pre>
+</details>
+
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">err</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+</code></pre></div>
+<h2 id="check-one-example">Check one example.</h2>
+<p>We can check one example.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span> <span class="n">run_check_example</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_check_example</span><span class="p">(</span>
+    <span class="n">experiment_name</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">file_list</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+</code></pre></div>
+<p>Alternatively we can check one as:</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span>
+    <span class="n">names</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># we can send list of names as [name1, name2, ...]</span>
+    <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+</code></pre></div>
+<h2 id="check-all-examples">Check all examples.</h2>
+<p>Or check all examples.</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+</code></pre></div>
+<h2 id="check-errors">Check errors</h2>
+<p>Lets look at example with error.</p>
+<div class="highlight"><pre><span></span><code><span class="n">cfg</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">examples_path</span><span class="o">=</span><span class="s2">&quot;../tests/examples/examples_errors/&quot;</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Examples with errors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">examples</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2"> errors&quot;</span><span class="p">)</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    Examples with errors: 1, example_extra_1: 6 errors
+
+    </pre>
+</details>
+
+<p>Let look at one of errors.<br />
+We got file name that has error, result of run and expected result. Now we can look for what is wrong.</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    ('help',
+     [('../tests/examples/examples_errors/exmpl_1__err_1.py',
+       ['usage: exmpl_1__err_1.py [-h] [--e E]\n\noptions:\n  -h, --help  show this help message and exit\n  --e E\n',
+        'usage: exmpl_1.py [-h] [--echo ECHO]\n\noptions:\n  -h, --help   show this help message and exit\n  --echo ECHO\n'])])
+    </pre>
+</details>
 
 
   
