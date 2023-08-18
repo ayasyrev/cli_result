@@ -1,6 +1,7 @@
 """ Test for run scripts and compare output with expected results.
 """
 from __future__ import annotations
+import re
 import sys
 
 import subprocess
@@ -26,29 +27,29 @@ class Cfg:
     split: str = "__"
 
 
-def get_examples_names(
-    cfg: Cfg = None,
+def get_examples(
     names: str | List[str] | None = None,
-) -> dict[str, list[Path]]:
+    cfg: Cfg = None,
+) -> List[Tuple[str, list[Path]]]:
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
-    names_files: Dict[str, List[str]] = defaultdict(list)
+    file_names: Dict[str, List[str]] = defaultdict(list)
     for filename in Path(cfg.examples_path).glob("*.py"):
         example_name = filename.stem.split(cfg.split)[0]
         if example_name == filename.stem:
-            names_files[example_name].insert(0, filename)
+            file_names[example_name].insert(0, filename)
         else:
-            names_files[example_name].append(filename)
-    if names is None:
-        return names_files
-    if isinstance(names, str):
-        names = [names]
-    return {
-        example_name: file_list
-        for example_name, file_list in names_files.items()
-        if example_name in names
-    }
+            file_names[example_name].append(filename)
+    if names is not None:
+        if isinstance(names, str):
+            names = [names]
+        file_names = {
+            example_name: file_list
+            for example_name, file_list in file_names.items()
+            if example_name in names
+        }
+    return list((name, files) for name, files in file_names.items())
 
 
 def validate_args(args: StrListStr) -> list[str]:
@@ -124,14 +125,14 @@ def write_result(
 
 
 def write_examples(
-    cfg: Cfg = None,
     examples: str | List[str] | None = None,
+    cfg: Cfg = None,
 ) -> None:
     """write experiments results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    examples = get_examples_names(cfg, examples)
-    for example_name, filenames in examples.items():
+    examples = get_examples(cfg=cfg, names=examples)
+    for example_name, filenames in examples:
         print(f"Writing results for {example_name}")
         name_args = get_args(example_name, cfg)
         for name, args in name_args.items():
@@ -164,48 +165,62 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
 
 
 def check_examples(
-    cfg: Cfg = None,
     names: str | List[str] | None = None,
-) -> Dict[str : Dict[str, str]] | None:
+    cfg: Cfg = None,
+) -> List[Tuple[str, List[str]]] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples_names(cfg, names)
+    experiments = get_examples(cfg=cfg, names=names)
     results = defaultdict(Dict[str, List[str]])
-    for experiment_name, filenames in experiments.items():
-        name_args = get_args(experiment_name, cfg)
-        errors = defaultdict(list)
-        for name, args in name_args.items():
-            for filename in filenames:
-                res, err = run_script(filename, args)
-                expected_res, expected_err = read_result(experiment_name, name, cfg)
-                if res != expected_res:
-                    if not usage_equal_with_replace(
-                        res,
-                        expected_res,
-                    ):
-                        errors[name].append({str(filename): [res, expected_res]})
-                if err != expected_err:
-                    if not usage_equal_with_replace(
-                        err,
-                        expected_err,
-                    ):
-                        errors[name].append({str(filename): [err, expected_err]})
+    for experiment_name, file_list in experiments:
+        errors = run_check_example(experiment_name, file_list, cfg=cfg)
         if errors:
             results[experiment_name] = errors
-    return results or None
+    if results:
+        return list((name, errors) for name, errors in results.items())
+    return None
+
+
+def run_check_example(
+    experiment_name: str,
+    file_list: List[Path],
+    cfg: Cfg | None = None,
+) -> List[Tuple[str, str]]:
+    """Run and check example"""
+    if cfg is None:
+        cfg = Cfg()  # pragma: no cover  checked from run_examples
+    name_args = get_args(experiment_name, cfg)
+    errors = defaultdict(list)
+    for name, args in name_args.items():
+        for file in file_list:
+            res, err = run_script(file, args)
+            expected_res, expected_err = read_result(experiment_name, name, cfg)
+            if res != expected_res:
+                if not usage_equal_with_replace(
+                    res,
+                    expected_res,
+                ):
+                    errors[name].append((str(file), [res, expected_res]))
+            if err != expected_err:
+                if not usage_equal_with_replace(
+                    err,
+                    expected_err,
+                ):
+                    errors[name].append((str(file), [err, expected_err]))
+    if errors:
+        return list((name, err_list) for name, err_list in errors.items())
+    return None
 
 
 def split_usage(res: str) -> Tuple[str, str]:
     """Split result to usage (as one line) and other."""
-    lines = res.split("\n")
-    usage_lines = []
-    num = 0
-    for num, line in enumerate(lines):
-        if line == "":
-            break
-        usage_lines.append(line.strip())
-    return " ".join(usage_lines), "\n".join(lines[num + 1 :])
+    split = res.split("\n\n", maxsplit=1)
+    if len(split) == 1:
+        usage, other = res, ""
+    else:
+        usage, other = split[0], split[1]
+    return " ".join(line.strip() for line in usage.split("\n")), other
 
 
 def get_prog_name(usage: str) -> str:
@@ -231,12 +246,24 @@ def usage_equal_with_replace(
         usage, other = split_usage(res)
         usage_expected, other_expected = split_usage(expected_res)
         usage_replaced = replace_prog_name(usage, usage_expected)
-        if usage_replaced == usage_expected:
+        if usage_replaced != usage_expected:
+            return replace_py_less310(usage_replaced, usage_expected)
+        else:
             if other == other_expected:
                 return True
-            if ARGPARSE_OLD:  # pragma: no cover
-                if (
-                    other.replace("optional arguments", "options") == other_expected
-                ):  # pragma: no cover
-                    return True
+            if (
+                ARGPARSE_OLD and replace_py_less310(other, other_expected)
+            ):  # pragma: no cover
+                return True
+    return False
+
+
+def replace_py_less310(text: str, expected: str) -> bool:
+    """Replace text used in python less 3.10"""
+    replaced = text.replace("optional arguments", "options")
+    if replaced == expected:
+        return True
+    expected_replaced = re.sub(r"argument \{(.*)\}: ", "", expected)
+    if replaced == expected_replaced:
+        return True
     return False
