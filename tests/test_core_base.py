@@ -136,6 +136,7 @@ def test_read_result():
 def test_run_script():
     """test run_script"""
     examples = get_examples()
+    examples.sort(key=lambda x: x[0])
     example = examples[0]
     name = example[0]
     assert name == "example_1"
