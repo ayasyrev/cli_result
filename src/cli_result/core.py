@@ -185,7 +185,7 @@ def check_examples(
 def run_check_example(
     experiment_name: str,
     file_list: List[Path],
-    cfg: Cfg | None,
+    cfg: Cfg | None = None,
 ) -> List[Tuple[str, str]]:
     """Run and check example"""
     if cfg is None:

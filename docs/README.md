@@ -6,7 +6,7 @@ Simple lib to test results or script runs from command line.
 [![PyPI version](https://img.shields.io/pypi/v/cli_result?color=blue)](https://pypi.org/project/cli_result/)  
 [![Tests](https://github.com/ayasyrev/cli_result/workflows/Tests/badge.svg)](https://github.com/ayasyrev/cli_result/actions?workflow=Tests)  [![Codecov](https://codecov.io/gh/ayasyrev/cli_result/branch/main/graph/badge.svg)](https://codecov.io/gh/ayasyrev/cli_result)  
 
-# Install
+## Install
 
 Install from pypi:  
 
@@ -16,7 +16,7 @@ Or install from github repo:
 
 `pip install git+https://github.com/ayasyrev/cli_result.git`
 
-# Usage.
+## Usage.
 
 Main purpose test results of examples run. We run all scripts in examples folder and compare results with expected results. Check it at different python versions.  
 So we can be sure that all scripts work and has similar behaviors in different python versions.  
@@ -28,7 +28,7 @@ Arguments for tests at file name same as script name + `__args.txt.`
 
 
 ```python
-from cli_result.core import check_examples, Cfg
+from cli_result import check_examples, Cfg
 ```
 
 
@@ -36,9 +36,156 @@ from cli_result.core import check_examples, Cfg
 result = check_examples()
 ```
 
-This run all scripts in examples folder with arguments from `__args.txt.` file and compare with results at `results/` folder.  
+This run all scripts in examples folder with arguments from `__args.txt` file and compare with results at `results/` folder.  
 
 
 ```python
 assert result is None
 ```
+
+## Examples
+
+We can change examples folder.
+
+
+```python
+cfg = Cfg(examples_path="../examples/examples_extra/")
+```
+
+Check examples at folder:
+
+
+```python
+from cli_result import  get_examples
+
+examples = get_examples(cfg=cfg)
+```
+
+We got list of examples as tuple example_name, files
+
+
+```python
+example = examples[0]
+# name
+print(example[0])
+# files
+print(example[1][0])
+print(example[1][1])
+```
+<details open> <summary>output</summary>  
+    <pre>
+    example_extra_1
+    ../examples/examples_extra/example_extra_1.py
+    ../examples/examples_extra/example_extra_1__alter.py
+    
+    </pre>
+</details>
+
+## Run script
+
+We can run script and look at result.
+
+
+```python
+from cli_result import  run_script
+
+res, err = run_script(
+    filename=example[1][0],
+    args="--help",
+)
+```
+
+
+```python
+print(res)
+```
+<details open> <summary>output</summary>  
+    <pre>
+    usage: example_extra_1.py [-h] [--echo ECHO]
+    
+    options:
+      -h, --help   show this help message and exit
+      --echo ECHO
+    
+    
+    </pre>
+</details>
+
+
+```python
+assert err == ""
+```
+
+## Check one example.
+
+We can check one example.
+
+
+```python
+from cli_result import run_check_example
+
+result = run_check_example(
+    experiment_name=example[0],
+    file_list=example[1],
+    cfg=cfg,
+)
+assert result is None
+```
+
+Alternatively we can check one as:
+
+
+```python
+result = check_examples(
+    names=example[0],  # we can send list of names as [name1, name2, ...]
+    cfg=cfg,
+)
+assert result is None
+```
+
+## Check all examples.
+
+Or check all examples.
+
+
+```python
+result = check_examples(cfg=cfg)
+assert result is None
+```
+
+## Check errors
+
+Lets look at example with error.
+
+
+```python
+cfg = Cfg(examples_path="../tests/examples/examples_errors/")
+
+result = check_examples(cfg=cfg)
+assert result is not None
+print(f"Examples with errors: {len(result)}, {examples[0][0]}: {len(result[0][1])} errors")
+```
+<details open> <summary>output</summary>  
+    <pre>
+    Examples with errors: 1, example_extra_1: 6 errors
+    
+    </pre>
+</details>
+
+Let look at one of errors.  
+We got file name that has error, result of run and expected result. Now we can look for what is wrong.
+
+
+```python
+result[0][1][0]
+```
+<details open> <summary>output</summary>  
+    <pre>
+    ('help',
+     [('../tests/examples/examples_errors/exmpl_1__err_1.py',
+       ['usage: exmpl_1__err_1.py [-h] [--e E]\n\noptions:\n  -h, --help  show this help message and exit\n  --e E\n',
+        'usage: exmpl_1.py [-h] [--echo ECHO]\n\noptions:\n  -h, --help   show this help message and exit\n  --echo ECHO\n'])])
+    </pre>
+</details>
+
+
