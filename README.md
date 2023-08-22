@@ -130,7 +130,7 @@ from cli_result import read_result, get_args
 ```
 
 Load arguments for example.  
-`get_args` retuns list of `Args`
+`get_args` returns list of `Args`
 
 
 ```python
