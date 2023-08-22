@@ -211,7 +211,9 @@
           
             
               
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -312,6 +314,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#load-expected-result" class="md-nav__link">
+    Load expected result.
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#check-one-example" class="md-nav__link">
     Check one example.
   </a>
@@ -347,6 +356,8 @@
               </div>
             
             
+              
+                
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
@@ -390,6 +401,13 @@
         <li class="md-nav__item">
   <a href="#run-script" class="md-nav__link">
     Run script
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#load-expected-result" class="md-nav__link">
+    Load expected result.
   </a>
   
 </li>
@@ -452,26 +470,26 @@ But it's good for quick tests, to check configs and shorts demos (examples).</p>
 Arguments for tests at file name same as script name + <code>__args.txt.</code></p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span> <span class="n">check_examples</span><span class="p">,</span> <span class="n">Cfg</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="n">errors</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">()</span>
 </code></pre></div>
 <p>This run all scripts in examples folder with arguments from <code>__args.txt</code> file and compare with results at <code>results/</code> folder.  </p>
-<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">errors</span> <span class="ow">is</span> <span class="kc">None</span>
 </code></pre></div>
 <h2 id="examples">Examples</h2>
 <p>We can change examples folder.</p>
 <div class="highlight"><pre><span></span><code><span class="n">cfg</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">examples_path</span><span class="o">=</span><span class="s2">&quot;../examples/examples_extra/&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Check examples at folder:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span>  <span class="n">get_examples</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span> <span class="n">get_examples</span>
 
 <span class="n">examples</span> <span class="o">=</span> <span class="n">get_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
 </code></pre></div>
-<p>We got list of examples as tuple example_name, files</p>
+<p>We got list of examples as named tuple example_name, files</p>
 <div class="highlight"><pre><span></span><code><span class="n">example</span> <span class="o">=</span> <span class="n">examples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="c1"># name</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># or example[0]</span>
 <span class="c1"># files</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
 </code></pre></div>
 <details open> <summary>output</summary>  
@@ -487,12 +505,12 @@ Arguments for tests at file name same as script name + <code>__args.txt.</code><
 <p>We can run script and look at result.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span>  <span class="n">run_script</span>
 
-<span class="n">res</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">run_script</span><span class="p">(</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_script</span><span class="p">(</span>
     <span class="n">filename</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
     <span class="n">args</span><span class="o">=</span><span class="s2">&quot;--help&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
 </code></pre></div>
 <details open> <summary>output</summary>  
     <pre>
@@ -506,62 +524,124 @@ Arguments for tests at file name same as script name + <code>__args.txt.</code><
     </pre>
 </details>
 
-<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">err</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">stderr</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>
+</code></pre></div>
+<h2 id="load-expected-result">Load expected result.</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span> <span class="n">read_result</span><span class="p">,</span> <span class="n">get_args</span>
+</code></pre></div>
+<p>Load arguments for example.<br />
+<code>get_args</code> returns list of <code>Args</code></p>
+<div class="highlight"><pre><span></span><code><span class="n">args</span> <span class="o">=</span> <span class="n">get_args</span><span class="p">(</span><span class="n">example</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    Args(name='help', list=['--help'])
+
+    </pre>
+</details>
+
+<div class="highlight"><pre><span></span><code><span class="n">expected</span> <span class="o">=</span> <span class="n">read_result</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="n">example</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+    <span class="n">arg_name</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>  <span class="c1"># or args[0][0]</span>
+    <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Now we can compare results.</p>
+<div class="highlight"><pre><span></span><code><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">expected</span>
 </code></pre></div>
 <h2 id="check-one-example">Check one example.</h2>
 <p>We can check one example.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">cli_result</span> <span class="kn">import</span> <span class="n">run_check_example</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">run_check_example</span><span class="p">(</span>
-    <span class="n">experiment_name</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-    <span class="n">file_list</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+<span class="n">errors</span> <span class="o">=</span> <span class="n">run_check_example</span><span class="p">(</span>
+    <span class="n">example_name</span><span class="o">=</span><span class="n">example</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+    <span class="n">file_list</span><span class="o">=</span><span class="n">example</span><span class="o">.</span><span class="n">files</span><span class="p">,</span>
     <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">errors</span> <span class="ow">is</span> <span class="kc">None</span>
 </code></pre></div>
 <p>Alternatively we can check one as:</p>
-<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span>
-    <span class="n">names</span><span class="o">=</span><span class="n">example</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># we can send list of names as [name1, name2, ...]</span>
+<div class="highlight"><pre><span></span><code><span class="n">errors</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span>
+    <span class="n">names</span><span class="o">=</span><span class="n">example</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>  <span class="c1"># we can send list of names as [name1, name2, ...]</span>
     <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="k">assert</span> <span class="n">errors</span> <span class="ow">is</span> <span class="kc">None</span>
 </code></pre></div>
 <h2 id="check-all-examples">Check all examples.</h2>
 <p>Or check all examples.</p>
-<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span>
+<div class="highlight"><pre><span></span><code><span class="n">errors</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">errors</span> <span class="ow">is</span> <span class="kc">None</span>
 </code></pre></div>
 <h2 id="check-errors">Check errors</h2>
 <p>Lets look at example with error.</p>
 <div class="highlight"><pre><span></span><code><span class="n">cfg</span> <span class="o">=</span> <span class="n">Cfg</span><span class="p">(</span><span class="n">examples_path</span><span class="o">=</span><span class="s2">&quot;../tests/examples/examples_errors/&quot;</span><span class="p">)</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Examples with errors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">examples</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2"> errors&quot;</span><span class="p">)</span>
+<span class="n">errors</span> <span class="o">=</span> <span class="n">check_examples</span><span class="p">(</span><span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">errors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Examples with errors: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">examples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">list</span><span class="p">)</span><span class="si">}</span><span class="s2"> errors&quot;</span><span class="p">)</span>
 </code></pre></div>
 <details open> <summary>output</summary>  
     <pre>
-    Examples with errors: 1, example_extra_1: 6 errors
+    Examples with errors: 1, example_extra_1: 10 errors
 
     </pre>
 </details>
 
 <p>Let look at one of errors.<br />
 We got file name that has error, result of run and expected result. Now we can look for what is wrong.</p>
-<div class="highlight"><pre><span></span><code><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="n">example_error</span> <span class="o">=</span> <span class="n">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">example_error</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
 <details open> <summary>output</summary>  
     <pre>
-    ('help',
-     [('../tests/examples/examples_errors/exmpl_1__err_1.py',
-       ['usage: exmpl_1__err_1.py [-h] [--e E]\n\noptions:\n  -h, --help  show this help message and exit\n  --e E\n',
-        'usage: exmpl_1.py [-h] [--echo ECHO]\n\noptions:\n  -h, --help   show this help message and exit\n  --echo ECHO\n'])])
+    exmpl_1
+
+    </pre>
+</details>
+
+<div class="highlight"><pre><span></span><code><span class="n">error</span> <span class="o">=</span> <span class="n">example_error</span><span class="o">.</span><span class="n">list</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">argname</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    empty_str
+    ../tests/examples/examples_errors/exmpl_1__err_1.py
+
+    </pre>
+</details>
+
+<p>We can compare result with expected result.</p>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">res</span><span class="p">)</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    usage: exmpl_1__err_1.py [-h] [--e E]
+    exmpl_1__err_1.py: error: unrecognized arguments: ""
+
+
+    </pre>
+</details>
+
+<p>And expected is:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+</code></pre></div>
+<details open> <summary>output</summary>  
+    <pre>
+    usage: exmpl_1.py [-h] [--echo ECHO]
+    exmpl_1.py: error: unrecognized arguments: ""
+
+
     </pre>
 </details>
 
 
   
 
+
+  
 
 
 
