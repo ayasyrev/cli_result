@@ -1,14 +1,14 @@
 """ Test for run scripts and compare output with expected results.
 """
 from __future__ import annotations
-import re
-import sys
-
-import subprocess
-from collections import defaultdict
 from dataclasses import dataclass
+
+import re
+import subprocess
+import sys
+from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, NamedTuple, Tuple, Union
 
 StrListStr = Union[str, List[str], None]
 PathStr = Union[str, Path, None]
@@ -19,7 +19,7 @@ ARGPARSE_OLD = sys.version_info.minor < 10
 
 @dataclass
 class Cfg:
-    """base config for cli_result"""
+    """Base config for cli_result"""
 
     examples_path: str = "examples"
     results_path: str = "results"
@@ -27,10 +27,47 @@ class Cfg:
     split: str = "__"
 
 
+class Example(NamedTuple):
+    """Example - name and list of files"""
+
+    name: str
+    files: list[Path]
+
+
+class Args(NamedTuple):
+    """Args - name and list of arguments"""
+
+    name: str
+    list: list[str]
+
+
+class Result(NamedTuple):
+    """Result - stdout and stderr"""
+
+    stdout: str
+    stderr: str
+
+
+class Error(NamedTuple):
+    """Error - argname / filename / res / exp"""
+
+    argname: str
+    filename: str
+    res: str
+    exp: str
+
+
+class ExampleError(NamedTuple):
+    """Example Errors - example name / list of Errors"""
+
+    name: str
+    list: list[Error]
+
+
 def get_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
-) -> List[Tuple[str, list[Path]]]:
+) -> List[Example]:
     """get examples names"""
     if cfg is None:
         cfg = Cfg()
@@ -49,7 +86,7 @@ def get_examples(
             for example_name, file_list in file_names.items()
             if example_name in names
         }
-    return list((name, files) for name, files in file_names.items())
+    return list(Example(name, files) for name, files in file_names.items())
 
 
 def validate_args(args: StrListStr) -> list[str]:
@@ -61,24 +98,24 @@ def validate_args(args: StrListStr) -> list[str]:
     return args
 
 
-def run_script(filename: str, args: StrListStr = None) -> tuple[str, str]:
+def run_script(filename: str, args: StrListStr = None) -> Result:
     """run script"""
     args = validate_args(args)
     if not Path(filename).exists():
-        return "", ""
+        return Result("", "")
     res = subprocess.run(
         ["python", filename, *args],
         capture_output=True,
         check=False,
     )
 
-    return res.stdout.decode("utf-8"), res.stderr.decode("utf-8")
+    return Result(res.stdout.decode("utf-8"), res.stderr.decode("utf-8"))
 
 
 def get_args(
     name: str,
     cfg: Cfg = None,
-) -> dict[str, str]:
+) -> list[Args]:
     """get script args from file"""
     if cfg is None:
         cfg = Cfg()
@@ -88,64 +125,59 @@ def get_args(
         f"{name}{cfg.split}{cfg.args_filename_suffix}.txt",
     )
     if not args_filename.exists():
-        return {}
+        return []
     with open(args_filename, "r", encoding="utf-8") as file:
         lines = [
             line.split("#", maxsplit=1)[0].rstrip().split(":", maxsplit=1)
             for line in file.readlines()
             if line != "\n" and not line.startswith("#")
         ]
-    return {item[0]: item[1].split() if len(item) == 2 else None for item in lines}
+    return [
+        Args(item[0], item[1].split() if len(item) == 2 else None) for item in lines
+    ]
 
 
 def write_result(
     name: str,
-    stdout: str,
-    stderr: str,
-    arg_name: str,
-    args: list[str] | None = None,
+    result: Result,
+    args: Args,
     cfg: Cfg = None,
 ) -> None:
     """write result to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
-    if args is None:
-        args = []
     result_filename = Path(
         cfg.examples_path,
         cfg.results_path,
-        f"{name}{cfg.split}{arg_name}.txt",
+        f"{name}{cfg.split}{args.name}.txt",
     )
-    # if not result_filename.parent.exists():
-    #     result_filename.parent.mkdir(parents=True)
-    print(f"  {name}: {args}, filename: {result_filename}")
+    print(f"  {name}: {args.name}, filename: {result_filename}")
     with open(result_filename, "w", encoding="utf-8") as file:
-        file.write(f"# result for run {name} with args: {', '.join(args)}\n")
-        file.write(f"# stdout\n{stdout}# stderr\n{stderr}")
+        file.write(f"# result for run {name} with args: {', '.join(args.list)}\n")
+        file.write(f"# stdout\n{result.stdout}# stderr\n{result.stderr}")
 
 
 def write_examples(
     examples: str | List[str] | None = None,
     cfg: Cfg = None,
 ) -> None:
-    """write experiments results to file"""
+    """write examples results to file"""
     if cfg is None:  # pragma: no cover
         cfg = Cfg()
     examples = get_examples(cfg=cfg, names=examples)
     for example_name, filenames in examples:
         print(f"Writing results for {example_name}")
-        name_args = get_args(example_name, cfg)
-        for name, args in name_args.items():
+        args_list = get_args(example_name, cfg)
+        for args in args_list:
             write_result(
                 example_name,
-                *run_script(filenames[0], args),
-                name,
+                run_script(filenames[0], args.list),
                 args,
                 cfg,
             )
 
 
-def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
+def read_result(name: str, arg_name: str, cfg: Cfg = None) -> Result:
     """read result from file, return stdout and stderr.
     If not found, return empty strings
     """
@@ -157,60 +189,54 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> tuple[str, str]:
         f"{name}{cfg.split}{arg_name}.txt",
     )
     if not result_filename.exists():
-        return "", ""
+        return Result("", "")
     with open(result_filename, "r", encoding="utf-8") as file:
         text = file.read()
     res, err = text.split("# stdout\n")[1].split("# stderr\n")
-    return res, err
+    return Result(res, err)
 
 
 def check_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
-) -> List[Tuple[str, List[str]]] | None:
+) -> List[ExampleError] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
-    experiments = get_examples(cfg=cfg, names=names)
-    results = defaultdict(Dict[str, List[str]])
-    for experiment_name, file_list in experiments:
-        errors = run_check_example(experiment_name, file_list, cfg=cfg)
+    examples = get_examples(cfg=cfg, names=names)
+    errors_dict: dict[str, list[Error]] = defaultdict(list)
+    for example_name, file_list in examples:
+        errors = run_check_example(example_name, file_list, cfg=cfg)
         if errors:
-            results[experiment_name] = errors
-    if results:
-        return list((name, errors) for name, errors in results.items())
+            errors_dict[example_name].extend(errors)
+    if errors_dict:
+        return list(ExampleError(name, errors) for name, errors in errors_dict.items())
     return None
 
 
 def run_check_example(
-    experiment_name: str,
+    example_name: str,
     file_list: List[Path],
     cfg: Cfg | None = None,
-) -> List[Tuple[str, str]]:
+) -> List[Error] | None:
     """Run and check example"""
     if cfg is None:
         cfg = Cfg()  # pragma: no cover  checked from run_examples
-    name_args = get_args(experiment_name, cfg)
-    errors = defaultdict(list)
-    for name, args in name_args.items():
+    args_list = get_args(example_name, cfg)
+    errors: list[Error] = []
+    for args in args_list:
         for file in file_list:
-            res, err = run_script(file, args)
-            expected_res, expected_err = read_result(experiment_name, name, cfg)
-            if res != expected_res:
-                if not usage_equal_with_replace(
-                    res,
-                    expected_res,
-                ):
-                    errors[name].append((str(file), [res, expected_res]))
-            if err != expected_err:
-                if not usage_equal_with_replace(
-                    err,
-                    expected_err,
-                ):
-                    errors[name].append((str(file), [err, expected_err]))
-    if errors:
-        return list((name, err_list) for name, err_list in errors.items())
-    return None
+            result = run_script(file, args.list)
+            expected = read_result(example_name, args.name, cfg)
+            for res, expected in zip(result, expected):
+                if res != expected:
+                    if not usage_equal_with_replace(
+                        res,
+                        expected,
+                    ):
+                        errors.append(Error(args.name, str(file), res, expected))
+
+    return errors or None
 
 
 def split_usage(res: str) -> Tuple[str, str]:
@@ -251,8 +277,8 @@ def usage_equal_with_replace(
         else:
             if other == other_expected:
                 return True
-            if (
-                ARGPARSE_OLD and replace_py_less310(other, other_expected)
+            if ARGPARSE_OLD and replace_py_less310(
+                other, other_expected
             ):  # pragma: no cover
                 return True
     return False
