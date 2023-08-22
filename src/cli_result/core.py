@@ -48,19 +48,13 @@ class Result(NamedTuple):
     stderr: str
 
 
-class ResExp(NamedTuple):
-    """Result / Expected"""
-
-    res: str
-    exp: str
-
-
 class Error(NamedTuple):
-    """Error - argname / filename / ResExp"""
+    """Error - argname / filename / res / exp"""
 
     argname: str
     filename: str
-    res_exp: ResExp
+    res: str
+    exp: str
 
 
 class ExampleError(NamedTuple):
@@ -240,9 +234,7 @@ def run_check_example(
                         res,
                         expected,
                     ):
-                        errors.append(
-                            Error(args.name, str(file), ResExp(res, expected))
-                        )
+                        errors.append(Error(args.name, str(file), res, expected))
 
     return errors or None
 
