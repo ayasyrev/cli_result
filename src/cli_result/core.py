@@ -48,6 +48,28 @@ class Result(NamedTuple):
     stderr: str
 
 
+class ResExp(NamedTuple):
+    """Result / Expected"""
+
+    res: str
+    exp: str
+
+
+class Error(NamedTuple):
+    """Error - argname / filename / ResExp"""
+
+    argname: str
+    filename: str
+    res_exp: ResExp
+
+
+class ExampleError(NamedTuple):
+    """Example Errors - example name / list of Errors"""
+
+    name: str
+    list: list[Error]
+
+
 def get_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
@@ -183,18 +205,18 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> Result:
 def check_examples(
     names: str | List[str] | None = None,
     cfg: Cfg = None,
-) -> List[Tuple[str, List[str]]] | None:
+) -> List[ExampleError] | None:
     """Runs examples, compare results with saved"""
     if cfg is None:
         cfg = Cfg()
     examples = get_examples(cfg=cfg, names=names)
-    results = defaultdict(Dict[str, List[str]])
+    errors_dict: dict[str, list[Error]] = defaultdict(list)
     for example_name, file_list in examples:
         errors = run_check_example(example_name, file_list, cfg=cfg)
         if errors:
-            results[example_name] = errors
-    if results:
-        return list((name, errors) for name, errors in results.items())
+            errors_dict[example_name].extend(errors)
+    if errors_dict:
+        return list(ExampleError(name, errors) for name, errors in errors_dict.items())
     return None
 
 
@@ -202,31 +224,27 @@ def run_check_example(
     example_name: str,
     file_list: List[Path],
     cfg: Cfg | None = None,
-) -> List[Tuple[str, str]]:
+) -> List[Error] | None:
     """Run and check example"""
     if cfg is None:
         cfg = Cfg()  # pragma: no cover  checked from run_examples
     args_list = get_args(example_name, cfg)
-    errors = defaultdict(list)
+    errors: list[Error] = []
     for args in args_list:
         for file in file_list:
-            res, err = run_script(file, args.list)
-            expected_res, expected_err = read_result(example_name, args.name, cfg)
-            if res != expected_res:
-                if not usage_equal_with_replace(
-                    res,
-                    expected_res,
-                ):
-                    errors[args.name].append((str(file), [res, expected_res]))
-            if err != expected_err:
-                if not usage_equal_with_replace(
-                    err,
-                    expected_err,
-                ):
-                    errors[args.name].append((str(file), [err, expected_err]))
-    if errors:
-        return list((name, err_list) for name, err_list in errors.items())
-    return None
+            result = run_script(file, args.list)
+            expected = read_result(example_name, args.name, cfg)
+            for res, expected in zip(result, expected):
+                if res != expected:
+                    if not usage_equal_with_replace(
+                        res,
+                        expected,
+                    ):
+                        errors.append(
+                            Error(args.name, str(file), ResExp(res, expected))
+                        )
+
+    return errors or None
 
 
 def split_usage(res: str) -> Tuple[str, str]:
