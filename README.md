@@ -1,3 +1,8 @@
+---
+hide:
+  - navigation
+---
+
 # Cli_results
 
 Simple lib to test results or script runs from command line.  
@@ -33,14 +38,14 @@ from cli_result import check_examples, Cfg
 
 
 ```python
-result = check_examples()
+errors = check_examples()
 ```
 
 This run all scripts in examples folder with arguments from `__args.txt` file and compare with results at `results/` folder.  
 
 
 ```python
-assert result is None
+assert errors is None
 ```
 
 ## Examples
@@ -56,20 +61,20 @@ Check examples at folder:
 
 
 ```python
-from cli_result import  get_examples
+from cli_result import get_examples
 
 examples = get_examples(cfg=cfg)
 ```
 
-We got list of examples as tuple example_name, files
+We got list of examples as named tuple example_name, files
 
 
 ```python
 example = examples[0]
 # name
-print(example[0])
+print(example.name)  # or example[0]
 # files
-print(example[1][0])
+print(example.files[0])
 print(example[1][1])
 ```
 <details open> <summary>output</summary>  
@@ -89,7 +94,7 @@ We can run script and look at result.
 ```python
 from cli_result import  run_script
 
-res, err = run_script(
+result = run_script(
     filename=example[1][0],
     args="--help",
 )
@@ -97,7 +102,7 @@ res, err = run_script(
 
 
 ```python
-print(res)
+print(result.stdout)
 ```
 <details open> <summary>output</summary>  
     <pre>
@@ -113,7 +118,47 @@ print(res)
 
 
 ```python
-assert err == ""
+assert result.stderr == ""
+```
+
+## Load expected result.
+
+
+```python
+from cli_result import read_result, get_args
+
+```
+
+Load arguments for example.  
+`get_args` returns list of `Args`
+
+
+```python
+args = get_args(example.name, cfg)
+
+print(args[0])
+```
+<details open> <summary>output</summary>  
+    <pre>
+    Args(name='help', list=['--help'])
+    
+    </pre>
+</details>
+
+
+```python
+expected = read_result(
+    name=example.name,
+    arg_name=args[0].name,  # or args[0][0]
+    cfg=cfg,
+)
+```
+
+Now we can compare results.
+
+
+```python
+assert result == expected
 ```
 
 ## Check one example.
@@ -124,23 +169,23 @@ We can check one example.
 ```python
 from cli_result import run_check_example
 
-result = run_check_example(
-    experiment_name=example[0],
-    file_list=example[1],
+errors = run_check_example(
+    example_name=example.name,
+    file_list=example.files,
     cfg=cfg,
 )
-assert result is None
+assert errors is None
 ```
 
 Alternatively we can check one as:
 
 
 ```python
-result = check_examples(
-    names=example[0],  # we can send list of names as [name1, name2, ...]
+errors = check_examples(
+    names=example.name,  # we can send list of names as [name1, name2, ...]
     cfg=cfg,
 )
-assert result is None
+assert errors is None
 ```
 
 ## Check all examples.
@@ -149,8 +194,8 @@ Or check all examples.
 
 
 ```python
-result = check_examples(cfg=cfg)
-assert result is None
+errors = check_examples(cfg=cfg)
+assert errors is None
 ```
 
 ## Check errors
@@ -161,13 +206,13 @@ Lets look at example with error.
 ```python
 cfg = Cfg(examples_path="../tests/examples/examples_errors/")
 
-result = check_examples(cfg=cfg)
-assert result is not None
-print(f"Examples with errors: {len(result)}, {examples[0][0]}: {len(result[0][1])} errors")
+errors = check_examples(cfg=cfg)
+assert errors is not None
+print(f"Examples with errors: {len(errors)}, {examples[0].name}: {len(errors[0].list)} errors")
 ```
 <details open> <summary>output</summary>  
     <pre>
-    Examples with errors: 1, example_extra_1: 6 errors
+    Examples with errors: 1, example_extra_1: 10 errors
     
     </pre>
 </details>
@@ -177,15 +222,57 @@ We got file name that has error, result of run and expected result. Now we can l
 
 
 ```python
-result[0][1][0]
+example_error = errors[0]
+print(example_error.name)
+
 ```
 <details open> <summary>output</summary>  
     <pre>
-    ('help',
-     [('../tests/examples/examples_errors/exmpl_1__err_1.py',
-       ['usage: exmpl_1__err_1.py [-h] [--e E]\n\noptions:\n  -h, --help  show this help message and exit\n  --e E\n',
-        'usage: exmpl_1.py [-h] [--echo ECHO]\n\noptions:\n  -h, --help   show this help message and exit\n  --echo ECHO\n'])])
+    exmpl_1
+    
     </pre>
 </details>
 
 
+```python
+error = example_error.list[4]
+print(error.argname)
+print(error.filename)
+```
+<details open> <summary>output</summary>  
+    <pre>
+    empty_str
+    ../tests/examples/examples_errors/exmpl_1__err_1.py
+    
+    </pre>
+</details>
+
+We can compare result with expected result.
+
+
+```python
+print(error.res)
+```
+<details open> <summary>output</summary>  
+    <pre>
+    usage: exmpl_1__err_1.py [-h] [--e E]
+    exmpl_1__err_1.py: error: unrecognized arguments: ""
+    
+    
+    </pre>
+</details>
+
+And expected is:
+
+
+```python
+print(error.exp)
+```
+<details open> <summary>output</summary>  
+    <pre>
+    usage: exmpl_1.py [-h] [--echo ECHO]
+    exmpl_1.py: error: unrecognized arguments: ""
+    
+    
+    </pre>
+</details>
