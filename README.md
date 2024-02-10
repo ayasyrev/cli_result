@@ -73,12 +73,11 @@ print(example.files[0])
 print(example[1][1])
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    example_extra_1
-    ../examples/examples_extra/example_extra_1.py
-    ../examples/examples_extra/example_extra_1__alter.py
-    
-    </pre>
+<pre>
+example_extra_1
+../examples/examples_extra/example_extra_1.py
+../examples/examples_extra/example_extra_1__alter.py
+</pre>
 </details>
 
 ## Run script
@@ -100,15 +99,13 @@ result = run_script(
 print(result.stdout)
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    usage: example_extra_1.py [-h] [--echo ECHO]
-    
-    options:
-      -h, --help   show this help message and exit
-      --echo ECHO
-    
-    
-    </pre>
+<pre>
+usage: example_extra_1.py [-h] [--echo ECHO]  
+
+options:
+    -h, --help   show this help message and exit
+    --echo ECHO
+</pre>
 </details>
 
 
@@ -121,7 +118,6 @@ assert result.stderr == ""
 
 ```python
 from cli_result import read_result, get_args
-
 ```
 
 Load arguments for example.  
@@ -134,10 +130,9 @@ args = get_args(example.name, cfg)
 print(args[0])
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    Args(name='help', list=['--help'])
-    
-    </pre>
+<pre>
+Args(name='help', list=['--help'])
+</pre>
 </details>
 
 
@@ -206,10 +201,9 @@ assert errors is not None
 print(f"Examples with errors: {len(errors)}, {examples[0].name}: {len(errors[0].list)} errors")
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    Examples with errors: 1, example_extra_1: 10 errors
-    
-    </pre>
+<pre>
+Examples with errors: 1, example_extra_1: 10 errors
+</pre>
 </details>
 
 Let look at one of errors.  
@@ -219,13 +213,11 @@ We got file name that has error, result of run and expected result. Now we can l
 ```python
 example_error = errors[0]
 print(example_error.name)
-
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    example_1
-    
-    </pre>
+<pre>
+example_1
+</pre>
 </details>
 
 
@@ -235,11 +227,11 @@ print(error.argname)
 print(error.filename)
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    empty_str
-    ../tests/examples/examples_errors/example_1__err_1.py
-    
-    </pre>
+<pre>
+empty_str
+../tests/examples/examples_errors/example_1__err_1.py
+
+</pre>
 </details>
 
 We can compare result with expected result.
@@ -249,12 +241,10 @@ We can compare result with expected result.
 print(error.res)
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    usage: example_1__err_1.py [-h] [--e E]
-    example_1__err_1.py: error: unrecognized arguments: ""
-    
-    
-    </pre>
+<pre>
+usage: example_1__err_1.py [-h] [--e E]
+example_1__err_1.py: error: unrecognized arguments: ""
+</pre>
 </details>
 
 And expected is:
@@ -264,10 +254,8 @@ And expected is:
 print(error.exp)
 ```
 <details open> <summary>output</summary>  
-    <pre>
-    usage: example_1.py [-h] [--echo ECHO]
-    example_1.py: error: unrecognized arguments: ""
-    
-    
-    </pre>
+<pre>
+usage: example_1.py [-h] [--echo ECHO]
+example_1.py: error: unrecognized arguments: ""
+</pre>
 </details>
