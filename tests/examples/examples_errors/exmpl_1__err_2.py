@@ -2,7 +2,6 @@
 # diff in result - extra output
 import argparse
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--echo",
