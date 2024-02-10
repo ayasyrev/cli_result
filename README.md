@@ -1,8 +1,3 @@
----
-hide:
-  - navigation
----
-
 # Cli_results
 
 Simple lib to test results or script runs from command line.  
