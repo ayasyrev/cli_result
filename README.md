@@ -223,7 +223,7 @@ print(example_error.name)
 ```
 <details open> <summary>output</summary>  
     <pre>
-    exmpl_1
+    example_1
     
     </pre>
 </details>
@@ -237,7 +237,7 @@ print(error.filename)
 <details open> <summary>output</summary>  
     <pre>
     empty_str
-    ../tests/examples/examples_errors/exmpl_1__err_1.py
+    ../tests/examples/examples_errors/example_1__err_1.py
     
     </pre>
 </details>
@@ -250,8 +250,8 @@ print(error.res)
 ```
 <details open> <summary>output</summary>  
     <pre>
-    usage: exmpl_1__err_1.py [-h] [--e E]
-    exmpl_1__err_1.py: error: unrecognized arguments: ""
+    usage: example_1__err_1.py [-h] [--e E]
+    example_1__err_1.py: error: unrecognized arguments: ""
     
     
     </pre>
@@ -265,8 +265,8 @@ print(error.exp)
 ```
 <details open> <summary>output</summary>  
     <pre>
-    usage: exmpl_1.py [-h] [--echo ECHO]
-    exmpl_1.py: error: unrecognized arguments: ""
+    usage: example_1.py [-h] [--echo ECHO]
+    example_1.py: error: unrecognized arguments: ""
     
     
     </pre>
