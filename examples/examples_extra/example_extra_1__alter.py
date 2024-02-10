@@ -3,7 +3,6 @@
 # used __ as split at file name
 import argparse
 
-
 parser_different_name = argparse.ArgumentParser()
 parser_different_name.add_argument(
     "--echo",

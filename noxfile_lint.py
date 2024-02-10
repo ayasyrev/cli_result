@@ -1,6 +1,5 @@
 import nox
 
-
 locations = "src/cli_result", "tests", "noxfile.py"
 
 
