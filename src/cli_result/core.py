@@ -1,5 +1,4 @@
-""" Test for run scripts and compare output with expected results.
-"""
+"""Test for run scripts and compare output with expected results."""
 
 from __future__ import annotations
 
