@@ -5,5 +5,5 @@ import nox
 def tests(session):
     args = session.posargs or ["--cov"]
     session.install("uv")
-    session.run("uv", "pip", "install", ".[tests]")
+    session.run("uv", "pip", "install", ".[test]")
     session.run("pytest", *args)
