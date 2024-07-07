@@ -5,7 +5,7 @@ repos:
   -   id: nbclean
       name: nbclean
       entry: nbclean
-    
+
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.6.0
   hooks:
@@ -30,7 +30,7 @@ repos:
       args: [ --unsafe ]
     - id: debug-statements
     - id: end-of-file-fixer
-    # - id: trailing-whitespace
+    - id: trailing-whitespace
     - id: requirements-txt-fixer
 - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff version.
