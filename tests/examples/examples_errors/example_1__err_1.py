@@ -1,14 +1,13 @@
-# diff output from exmpl_1.txt
-# diff in result - extra output
+# diff output from example_1.txt
+# different help
 import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--echo",
+    "--e",
 )
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     print(args.echo)
-    print("this is diff for ERR!")

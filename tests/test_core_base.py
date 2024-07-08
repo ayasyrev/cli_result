@@ -259,8 +259,8 @@ def test_write_examples(tmp_path: Path):
 
     examples_path = Path("tests/examples")
     expected_results_path = examples_path / cfg.results_path
-    example_fn = "exmpl_1.py"
-    example_args_fn = "exmpl_1__args.txt"
+    example_fn = "example_1.py"
+    example_args_fn = "example_1__args.txt"
 
     # create tmp example folder w/ examples
     test_example = tmp_path / example_fn
@@ -273,7 +273,7 @@ def test_write_examples(tmp_path: Path):
     shutil.copy(
         expected_results_path / example_args_fn, test_results_path / example_args_fn
     )
-    assert (tmp_path / "results" / "exmpl_1__args.txt").exists()
+    assert (tmp_path / "results" / "example_1__args.txt").exists()
 
     # args
     args_list = get_args("example_name", cfg)
