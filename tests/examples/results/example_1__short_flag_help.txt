@@ -1,6 +1,6 @@
-# result for run exmpl_1 with args: --help
+# result for run example_1 with args: -h
 # stdout
-usage: exmpl_1.py [-h] [--echo ECHO]
+usage: example_1.py [-h] [--echo ECHO]
 
 options:
   -h, --help   show this help message and exit
