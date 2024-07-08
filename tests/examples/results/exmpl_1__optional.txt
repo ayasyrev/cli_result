@@ -1,4 +1,0 @@
-# result for run exmpl_1 with args: --echo, cl_arg
-# stdout
-cl_arg
-# stderr

@@ -1,5 +1,4 @@
-""" Test for run scripts and compare output with expected results.
-"""
+"""Test for run scripts and compare output with expected results."""
 
 from __future__ import annotations
 
@@ -154,7 +153,8 @@ def write_result(
     )
     print(f"  {name}: {args.name}, filename: {result_filename}")
     with open(result_filename, "w", encoding="utf-8") as file:
-        file.write(f"# result for run {name} with args: {', '.join(args.list)}\n")
+        args_repr = " " + ", ".join(args.list) if args.list else ""
+        file.write(f"# result for run {name} with args:{args_repr}\n")
         file.write(f"# stdout\n{result.stdout}# stderr\n{result.stderr}")
 
 

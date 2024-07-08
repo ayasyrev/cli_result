@@ -1,4 +1,0 @@
-# result for run exmpl_1 with args: 
-# stdout
-None
-# stderr

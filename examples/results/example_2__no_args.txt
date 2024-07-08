@@ -1,4 +1,4 @@
-# result for run example_2 with args: 
+# result for run example_2 with args:
 # stdout
 main: echo=None
 # stderr

@@ -1,5 +1,0 @@
-# result for run exmpl_1 with args: cl_arg
-# stdout
-# stderr
-usage: exmpl_1.py [-h] [--echo ECHO]
-exmpl_1.py: error: unrecognized arguments: cl_arg

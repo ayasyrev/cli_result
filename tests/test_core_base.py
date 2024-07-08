@@ -258,34 +258,44 @@ def test_write_examples(tmp_path: Path):
     cfg = Cfg(examples_path=tmp_path)
 
     examples_path = Path("tests/examples")
-    results_path = examples_path / cfg.results_path
-    example_fn = "exmpl_1.py"
-    example_args_fn = "exmpl_1__args.txt"
+    expected_results_path = examples_path / cfg.results_path
+    example_fn = "example_1.py"
+    example_args_fn = "example_1__args.txt"
 
     # create tmp example folder w/ examples
     test_example = tmp_path / example_fn
     shutil.copy(examples_path / example_fn, test_example)
     assert test_example.exists()
 
-    assert (results_path / example_args_fn).exists()
+    assert (expected_results_path / example_args_fn).exists()
     test_results_path = tmp_path / cfg.results_path
     test_results_path.mkdir()
-    shutil.copy(results_path / example_args_fn, test_results_path / example_args_fn)
-    assert (tmp_path / "results" / "exmpl_1__args.txt").exists()
+    shutil.copy(
+        expected_results_path / example_args_fn, test_results_path / example_args_fn
+    )
+    assert (tmp_path / "results" / "example_1__args.txt").exists()
+
+    # args
+    args_list = get_args("example_name", cfg)
+    for args_name, args in args_list:
+        result = run_script(test_example / example_fn, args)
+        write_result(args_name, result, args, cfg)
+        writed_result = read_result(args_name, args_name, cfg)
+        assert writed_result == result
 
     write_examples(cfg=cfg)
-    res_files = list(results_path.glob("*.txt"))
+    expected_res_files = list(expected_results_path.glob("*.txt"))
     test_results_files = list(test_results_path.glob("*.txt"))
-    assert len(res_files) == len(test_results_files)
-    for file in res_files:
+    assert len(expected_res_files) == len(test_results_files)
+    for file in expected_res_files:
         with open(file, "r", encoding="utf-8") as fh:
-            res = fh.read()
+            expected = fh.read()
         with open(test_results_path / file.name, "r", encoding="utf-8") as fh:
             test = fh.read()
         if VERSION_LESS_10:
-            assert test.replace("optional arguments", "options") == res
+            assert test.replace("optional arguments", "options") == expected, file.name
         else:
-            assert res == test
+            assert expected == test, file.name
 
     # single result
     example_name = "example_name"
@@ -308,4 +318,4 @@ def test_write_examples(tmp_path: Path):
     assert result == ("res", "err")
     with open(result_file, "r", encoding="utf-8") as fh:
         first_line = fh.readline()
-    assert first_line.split("args: ", maxsplit=1)[1].rstrip() == ""
+    assert first_line.split("args:", maxsplit=1)[1].rstrip() == ""
