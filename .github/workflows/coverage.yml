@@ -13,7 +13,8 @@ jobs:
       with:
         python-version: "3.11"
         architecture: x64
-    - run: pip install nox
+    - run: pip install uv
+    - run: uv pip install nox
     - run: nox -f noxfile_cov.py -p "3.11"
       env:
         CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
