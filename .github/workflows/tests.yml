@@ -24,7 +24,7 @@ jobs:
         pip install uv
         uv pip install --system .[test] "coverage[toml]"
     - name: Tests
-      run: pytest --cov tests
+      run: pytest --cov
 
     - name: Coverage
       if: ${{ matrix.python == '3.11' }}
