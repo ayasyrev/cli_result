@@ -28,9 +28,7 @@ jobs:
 
     - name: Coverage
       if: ${{ matrix.python == '3.11' }}
-      run: |
-        uv pip install --system codecov
-        coverage xml --fail-under=0
-        codecov
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      uses: codecov/codecov-action@main
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: ayasyrev/cli_result
