@@ -19,5 +19,5 @@ jobs:
         architecture: x64
     - run: pip install uv
     - run: uv pip install --system .
-    - run: uv pip install nox
+    - run: uv pip install --system nox
     - run: nox -p ${{ matrix.python }}
