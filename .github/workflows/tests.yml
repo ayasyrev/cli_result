@@ -18,5 +18,6 @@ jobs:
         python-version: ${{ matrix.python }}
         architecture: x64
     - run: pip install uv
+    - run: uv pip install --system .
     - run: uv pip install nox
     - run: nox -p ${{ matrix.python }}
