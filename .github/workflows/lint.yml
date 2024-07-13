@@ -13,5 +13,5 @@ jobs:
       with:
         python-version: "3.11"
         architecture: x64
-    - run: pip install nox
-    - run: nox -p "3.11" -f noxfile_lint.py
+    - run: pip install ruff
+    - run: ruff check .
