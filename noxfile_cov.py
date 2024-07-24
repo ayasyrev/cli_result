@@ -4,7 +4,7 @@ import nox
 @nox.session(python=["3.11"], venv_backend="uv")
 def tests_cov(session):
     args = session.posargs or ["--cov"]
-    session.install(".[test]", "coverage[toml]")
+    session.install("-e .[test]", "coverage[toml]")
     session.run("pytest", *args)
 
 
