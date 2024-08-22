@@ -38,7 +38,7 @@ class Args(NamedTuple):
     """Args - name and list of arguments"""
 
     name: str
-    list: list[str]
+    list: list[str] | None
 
 
 class Result(NamedTuple):
@@ -49,7 +49,7 @@ class Result(NamedTuple):
 
 
 class Error(NamedTuple):
-    """Error - argname / filename / res / exp"""
+    """Error - argname / filename / res (result) / exp (expected)"""
 
     argname: str
     filename: str
@@ -66,12 +66,11 @@ class ExampleError(NamedTuple):
 
 def get_examples(
     names: str | List[str] | None = None,
-    cfg: Cfg = None,
+    cfg: Cfg | None = None,
 ) -> List[Example]:
     """get examples names"""
-    if cfg is None:
-        cfg = Cfg()
-    file_names: Dict[str, List[str]] = defaultdict(list)
+    cfg = Cfg() if cfg is None else cfg
+    file_names: Dict[str, List[Path]] = defaultdict(list)
     for filename in Path(cfg.examples_path).glob("*.py"):
         example_name = filename.stem.split(cfg.split)[0]
         if example_name == filename.stem:
@@ -98,7 +97,7 @@ def validate_args(args: StrListStr) -> list[str]:
     return args
 
 
-def run_script(filename: str, args: StrListStr = None) -> Result:
+def run_script(filename: str | Path, args: StrListStr = None) -> Result:
     """run script"""
     args = validate_args(args)
     if not Path(filename).exists():
@@ -114,11 +113,10 @@ def run_script(filename: str, args: StrListStr = None) -> Result:
 
 def get_args(
     name: str,
-    cfg: Cfg = None,
+    cfg: Cfg | None = None,
 ) -> list[Args]:
     """get script args from file"""
-    if cfg is None:
-        cfg = Cfg()
+    cfg = Cfg() if cfg is None else cfg
     args_filename = Path(
         cfg.examples_path,
         cfg.results_path,
@@ -141,11 +139,10 @@ def write_result(
     name: str,
     result: Result,
     args: Args,
-    cfg: Cfg = None,
+    cfg: Cfg | None = None,
 ) -> None:
     """write result to file"""
-    if cfg is None:  # pragma: no cover
-        cfg = Cfg()
+    cfg = Cfg() if cfg is None else cfg
     result_filename = Path(
         cfg.examples_path,
         cfg.results_path,
@@ -159,31 +156,29 @@ def write_result(
 
 
 def write_examples(
-    examples: str | List[str] | None = None,
-    cfg: Cfg = None,
+    names: str | List[str] | None = None,
+    cfg: Cfg | None = None,
 ) -> None:
     """write examples results to file"""
-    if cfg is None:  # pragma: no cover
-        cfg = Cfg()
-    examples = get_examples(cfg=cfg, names=examples)
-    for example_name, filenames in examples:
-        print(f"Writing results for {example_name}")
-        args_list = get_args(example_name, cfg)
+    cfg = Cfg() if cfg is None else cfg
+    examples: list[Example] = get_examples(cfg=cfg, names=names)
+    for example in examples:
+        print(f"Writing results for {example.name}")
+        args_list = get_args(example.name, cfg)
         for args in args_list:
             write_result(
-                example_name,
-                run_script(filenames[0], args.list),
+                example.name,
+                run_script(example.files[0], args.list),
                 args,
                 cfg,
             )
 
 
-def read_result(name: str, arg_name: str, cfg: Cfg = None) -> Result:
+def read_result(name: str, arg_name: str, cfg: Cfg | None = None) -> Result:
     """read result from file, return stdout and stderr.
     If not found, return empty strings
     """
-    if cfg is None:
-        cfg = Cfg()
+    cfg = Cfg() if cfg is None else cfg
     result_filename = Path(
         cfg.examples_path,
         cfg.results_path,
@@ -199,11 +194,10 @@ def read_result(name: str, arg_name: str, cfg: Cfg = None) -> Result:
 
 def check_examples(
     names: str | List[str] | None = None,
-    cfg: Cfg = None,
+    cfg: Cfg | None = None,
 ) -> List[ExampleError] | None:
     """Runs examples, compare results with saved"""
-    if cfg is None:
-        cfg = Cfg()
+    cfg = Cfg() if cfg is None else cfg
     examples = get_examples(cfg=cfg, names=names)
     errors_dict: dict[str, list[Error]] = defaultdict(list)
     for example_name, file_list in examples:
@@ -221,21 +215,20 @@ def run_check_example(
     cfg: Cfg | None = None,
 ) -> List[Error] | None:
     """Run and check example"""
-    if cfg is None:
-        cfg = Cfg()  # pragma: no cover  checked from run_examples
+    cfg = Cfg() if cfg is None else cfg
     args_list = get_args(example_name, cfg)
     errors: list[Error] = []
     for args in args_list:
         for file in file_list:
             result = run_script(file, args.list)
             expected = read_result(example_name, args.name, cfg)
-            for res, expected in zip(result, expected):
-                if res != expected:
+            for res, exp in zip(result, expected):
+                if res != exp:
                     if not usage_equal_with_replace(
                         res,
-                        expected,
+                        exp,
                     ):
-                        errors.append(Error(args.name, str(file), res, expected))
+                        errors.append(Error(args.name, str(file), res, exp))
 
     return errors or None
 
