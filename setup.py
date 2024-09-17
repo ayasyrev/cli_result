@@ -15,7 +15,6 @@ def load_requirements(filename: str) -> list[str]:
         return []
 
 
-REQUIRED = load_requirements(REQUIREMENTS_FILENAME)
 TEST_REQUIRED = load_requirements(REQUIREMENTS_TEST_FILENAME)
 DEV_REQUIRED = load_requirements(REQUIREMENTS_DEV_FILENAME)
 
@@ -28,6 +27,5 @@ EXTRAS = {
 
 
 setup(
-    install_requires=REQUIRED,
     extras_require=EXTRAS,
 )
