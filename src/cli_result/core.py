@@ -46,6 +46,7 @@ class Result(NamedTuple):
 
     stdout: str
     stderr: str
+    returncode: int = 0
 
 
 class Error(NamedTuple):
@@ -108,7 +109,9 @@ def run_script(filename: str | Path, args: StrListStr = None) -> Result:
         check=False,
     )
 
-    return Result(res.stdout.decode("utf-8"), res.stderr.decode("utf-8"))
+    return Result(
+        res.stdout.decode("utf-8"), res.stderr.decode("utf-8"), res.returncode
+    )
 
 
 def get_args(
@@ -222,7 +225,7 @@ def run_check_example(
         for file in file_list:
             result = run_script(file, args.list)
             expected = read_result(example_name, args.name, cfg)
-            for res, exp in zip(result, expected):
+            for res, exp in zip(result[:2], expected[:2]):
                 if res != exp:
                     if not usage_equal_with_replace(
                         res,

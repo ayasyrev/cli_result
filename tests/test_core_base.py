@@ -114,25 +114,29 @@ def test_read_result():
     """test read_result"""
     name_1 = "example_1"
     arg_name = "help"
-    res, err = read_result(name_1, arg_name)
+    res, err, returncode = read_result(name_1, arg_name)
     assert res == HELP_RES
     assert err == ""
+    assert returncode == 0
 
     # wrong name
-    res, err = read_result("wrong_name", arg_name)
-    assert res == ""
-    assert err == ""
+    res = read_result("wrong_name", arg_name)
+    assert res.stdout == ""
+    assert res.stderr == ""
+    assert res.returncode == 0
 
     # wrong filename
     cfg = Cfg(examples_path="examples/examples_extra")
-    res, err = read_result(name_1, arg_name, cfg)
-    assert res == ""
-    assert err == ""
+    res = read_result(name_1, arg_name, cfg)
+    assert res.stdout == ""
+    assert res.stderr == ""
+    assert res.returncode == 0
     # extra
     name_2 = "example_extra_1"
-    res, err = read_result(name_2, arg_name, cfg)
-    assert res == HELP_RES.replace(name_1, name_2)
-    assert err == ""
+    res = read_result(name_2, arg_name, cfg)
+    assert res.stdout == HELP_RES.replace(name_1, name_2)
+    assert res.stderr == ""
+    assert res.returncode == 0
 
 
 def test_run_script():
@@ -145,23 +149,21 @@ def test_run_script():
     filename = example[1][0]
     assert Path(filename).exists()
 
-    res, err = run_script(filename)
+    res = run_script(filename)
     expected = read_result(name, "no_args")
-    assert res == expected[0]
-    assert err == expected[1]
+    assert res == expected
 
-    res, err = run_script(filename, "--help")
+    res = run_script(filename, "--help")
     expected = read_result(name, "help")
-    assert res == expected[0] or usage_equal_with_replace(
-        res,
-        expected[0],
+    assert res.stdout == expected.stdout or usage_equal_with_replace(
+        res.stdout,
+        expected.stdout,
     )
-    assert err == expected[1]
+    assert res.stderr == expected.stderr
 
     # file not exist
-    res, err = run_script("wrong_name")
-    assert res == ""
-    assert err == ""
+    res = run_script("wrong_name")
+    assert res == Result("", "")
 
 
 def test_split_usage():
@@ -304,7 +306,7 @@ def test_write_examples(tmp_path: Path):
     result_file = test_results_path / f"{example_name}{cfg.split}{args.name}.txt"
     assert result_file.exists()
     result = read_result(example_name, args.name, cfg)
-    assert result == ("res", "err")
+    assert result == ("res", "err", 0)
     with open(result_file, "r", encoding="utf-8") as fh:
         first_line = fh.readline()
     assert first_line.split("args: ", maxsplit=1)[1] == "arg1, arg2\n"
@@ -315,7 +317,7 @@ def test_write_examples(tmp_path: Path):
     result_file = test_results_path / f"{example_name}{cfg.split}{args.name}.txt"
     assert result_file.exists()
     result = read_result(example_name, args.name, cfg)
-    assert result == ("res", "err")
+    assert result == ("res", "err", 0)
     with open(result_file, "r", encoding="utf-8") as fh:
         first_line = fh.readline()
     assert first_line.split("args:", maxsplit=1)[1].rstrip() == ""
