@@ -187,6 +187,12 @@ def test_run_module():
     assert res.stderr.endswith("wrong_name\n")
     assert res.returncode == 1
 
+    # optional args
+    res = run_module("examples.example_1", ["--echo", "hello"])
+    assert res.stdout == "hello\n"
+    assert not res.stderr
+    assert res.returncode == 0
+
 
 def test_split_usage():
     """test split_usage"""
