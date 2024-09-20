@@ -6,6 +6,7 @@ from .core import (
     read_result,
     run_check_example,
     run_script,
+    run_module,
 )
 from .version import __version__
 
@@ -19,4 +20,5 @@ __all__ = (
     "read_result",
     "run_check_example",
     "run_script",
+    "run_module",
 )
