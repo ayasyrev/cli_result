@@ -15,42 +15,42 @@ def test_check_examples():
     assert results is None
 
 
-cfg = Cfg(examples_path="examples/")
-examples = get_examples(cfg=cfg)
+cfg_base = Cfg(examples_path="examples/")
+examples_base = get_examples(cfg=cfg_base)
 
 
-@pytest.mark.parametrize("example_name, file_list", examples)
+@pytest.mark.parametrize("example_name, file_list", examples_base)
 def test_run_check_example(example_name, file_list):
     """test run_check_example"""
-    results = run_check_example(example_name, file_list, cfg=cfg)
+    results = run_check_example(example_name, file_list, cfg=cfg_base)
     assert results is None
 
 
-cfg = Cfg(examples_path="examples/examples_extra")
-examples = get_examples(cfg=cfg)
+cfg_extra = Cfg(examples_path="examples/examples_extra")
+examples_extra = get_examples(cfg=cfg_extra)
 
 
-@pytest.mark.parametrize("example_name, file_list", examples)
+@pytest.mark.parametrize("example_name, file_list", examples_extra)
 def test_run_check_example_extra(example_name, file_list):
     """test run_check_example"""
-    results = run_check_example(example_name, file_list, cfg=cfg)
+    results = run_check_example(example_name, file_list, cfg=cfg_extra)
     assert results is None
 
 
-cfg = Cfg(examples_path="tests/examples/examples_errors")
-examples = get_examples(cfg=cfg)
+cfg_errors = Cfg(examples_path="tests/examples/examples_errors")
+examples_errors = get_examples(cfg=cfg_errors)
 
 
-@pytest.mark.parametrize("example_name, file_list", examples)
+@pytest.mark.parametrize("example_name, file_list", examples_errors)
 def test_run_check_examples_errors(example_name, file_list):
     """test check_examples with errors"""
     # errors
-    results = run_check_example(example_name, file_list, cfg=cfg)
+    results = run_check_example(example_name, file_list, cfg=cfg_errors)
     assert results
 
 
 def test_check_examples_errors():
     """test check_examples with errors"""
     # errors
-    results = check_examples(cfg=cfg)
+    results = check_examples(cfg=cfg_errors)
     assert results
