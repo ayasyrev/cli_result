@@ -114,6 +114,24 @@ def run_script(filename: str | Path, args: StrListStr = None) -> Result:
     )
 
 
+def run_module(
+    module_name: str,
+    args: list[str] = [],
+    check: bool = False,
+    cwd: Path | None = None,
+) -> Result:
+    """run module"""
+    res = subprocess.run(
+        ["python", "-m", module_name, *args],
+        capture_output=True,
+        check=check,
+        cwd=cwd,
+    )
+    return Result(
+        res.stdout.decode("utf-8"), res.stderr.decode("utf-8"), res.returncode
+    )
+
+
 def get_args(
     name: str,
     cfg: Cfg | None = None,
