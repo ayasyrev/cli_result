@@ -13,6 +13,7 @@ from cli_result.core import (
     replace_prog_name,
     replace_py_less310,
     run_script,
+    run_module,
     split_usage,
     usage_equal_with_replace,
     validate_args,
@@ -164,6 +165,27 @@ def test_run_script():
     # file not exist
     res = run_script("wrong_name")
     assert res == Result("", "")
+
+
+def test_run_module():
+    """test run_module"""
+    res = run_module("examples.example_1")
+    expected = read_result("example_1", "no_args")
+    assert res == expected
+
+    res = run_module("examples.example_1", ["--help"])
+    expected = read_result("example_1", "help")
+    assert res.stdout == expected.stdout or usage_equal_with_replace(
+        res.stdout,
+        expected.stdout,
+    )
+    assert res.stderr == expected.stderr
+
+    # wrong name
+    res = run_module("wrong_name")
+    assert res.stdout == ""
+    assert res.stderr.endswith("wrong_name\n")
+    assert res.returncode == 1
 
 
 def test_split_usage():
