@@ -12,6 +12,7 @@ from cli_result.core import (
     read_result,
     replace_prog_name,
     replace_py_less310,
+    replace_py_312,
     run_script,
     run_module,
     split_usage,
@@ -280,6 +281,19 @@ def test_replace_py_less310():
     res = "error: invalid choice: a"
     expected_res = "error: argument {some_arg}: invalid choice: a"
     assert replace_py_less310(res, expected_res)
+
+
+def test_replace_py_312():
+    """test replace_py_312"""
+    res = "a.py: error: argument {a,b}: invalid choice: '' (choose from a, b)"
+    expected_res = (
+        "a.py: error: argument {a,b}: invalid choice: '' (choose from 'a', 'b')"
+    )
+    assert replace_py_312(res, expected_res)
+
+    res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from a, b, c)"
+    expected_res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
+    assert replace_py_312(res, expected_res)
 
 
 def test_write_examples(tmp_path: Path):

@@ -15,6 +15,7 @@ PathStr = Union[str, Path, None]
 
 
 ARGPARSE_OLD = sys.version_info.minor < 10
+ARGPARSE_12 = sys.version_info.minor >= 12
 
 
 @dataclass
@@ -296,6 +297,10 @@ def usage_equal_with_replace(
                 other, other_expected
             ):  # pragma: no cover
                 return True
+            if ARGPARSE_12 and replace_py_312(
+                other, other_expected
+            ):  # pragma: no cover
+                return True
     return False
 
 
@@ -306,5 +311,31 @@ def replace_py_less310(text: str, expected: str) -> bool:
         return True
     expected_replaced = re.sub(r"argument \{(.*)\}: ", "", expected)
     if replaced == expected_replaced:
+        return True
+    return False
+
+
+def replace_py_312(text: str, expected: str) -> bool:
+    """Replace text used in python from 3.12"""
+
+    # from python 3.12 if wrong args, error string "invalid choice:"
+    # expected arguments printed without "'"
+    def add_quotes_to_choices(match):
+        choices_part = match.group(1)  # Everything between "choose from " and ")"
+        items = [item.strip() for item in choices_part.split(",")]
+        quoted_items = []
+        for item in items:
+            if not (item.startswith("'") and item.endswith("'")):
+                quoted_items.append(f"'{item}'")
+            else:
+                quoted_items.append(item)
+        return f"(choose from {', '.join(quoted_items)})"
+
+    text_replaced = re.sub(
+        r"\(choose from ([^)]+)\)",
+        add_quotes_to_choices,
+        text,
+    )
+    if text_replaced == expected:
         return True
     return False
