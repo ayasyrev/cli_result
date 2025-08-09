@@ -9,12 +9,11 @@ from cli_result.core import (
     get_args,
     get_examples,
     get_prog_name,
-    ok_with_replace_py_312,
-    is_ok_with_add_quotes,
     read_result,
     replace_add_quotes,
     replace_prog_name,
     replace_py_less310,
+    replace_remove_quotes,
     run_script,
     run_module,
     split_usage,
@@ -304,30 +303,53 @@ def test_usage_equal_with_replace():
     assert usage_equal_with_replace(res, expected_res)
 
 
-def test_replace_py_312():
-    """test replace_py_312"""
-    res = "a.py: error: argument {a,b}: invalid choice: '' (choose from a, b)"
-    expected_res = (
-        "a.py: error: argument {a,b}: invalid choice: '' (choose from 'a', 'b')"
+def test_usage_equal_with_replace_2():
+    """test usage_equal_with_replace remove quotes"""
+    res = (
+        "usage: example_2.py [-h] [--echo ECHO] {a,b} ...\n\n"
+        "example_2.py: error: argument {a,b}: invalid choice: '' (choose from 'a', 'b')"
+
     )
-    assert ok_with_replace_py_312(res, expected_res)
+    expected_res = (
+        "usage: example_2.py [-h] [--echo ECHO] {a,b} ...\n\n"
+        "example_2.py: error: argument {a,b}: invalid choice: '' (choose from a, b)"
+        
+    )
+    assert usage_equal_with_replace(res, expected_res)
 
-    res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from a, b, c)"
-    expected_res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
-    assert ok_with_replace_py_312(res, expected_res)
+    res = "usage: \n\na.py: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
+    expected_res = (
+        "usage: \n\na.py: invalid choice: 'cl_arg' (choose from a, b, c)"
+        
+    )
+    assert usage_equal_with_replace(res, expected_res)
 
-
-def test_replace_add_quotes():
-    """test replace_add_quotes_to_choices"""
+def test_replace_remove_quotes():
+    """test replace_remove_quotes"""
     res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
     expected_res = (
         "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from a, b, c)"
     )
-    assert replace_add_quotes(res) == expected_res
+    assert replace_remove_quotes(res) == expected_res
 
     res = "a.py: error: argument {a,b}: invalid choice: '' (choose from 'a', 'b')"
     expected_res = "a.py: error: argument {a,b}: invalid choice: '' (choose from a, b)"
-    assert is_ok_with_add_quotes(res, expected_res)
+    assert replace_remove_quotes(res) == expected_res
+
+
+def test_replace_add_quotes():
+    """test replace_add_quotes_to_choices"""
+    res = "a.py: error: argument {a,b}: invalid choice: '' (choose from a, b)"
+    expected_res = (
+        "a.py: error: argument {a,b}: invalid choice: '' (choose from 'a', 'b')"
+    )
+    assert replace_add_quotes(res) == expected_res
+
+    res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from a, b, c)"
+    expected_res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
+    assert replace_add_quotes(res) == expected_res
+
+    
 
 
 def test_write_examples(tmp_path: Path):

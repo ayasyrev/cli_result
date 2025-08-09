@@ -285,23 +285,23 @@ def usage_equal_with_replace(
     expected_res: str,
 ) -> bool:
     """Check if usage and after replace result is equal to expected"""
-    if res.startswith("usage:"):
-        usage, other = split_usage(res)
-        usage_expected, other_expected = split_usage(expected_res)
-        usage_replaced = replace_prog_name(usage, usage_expected)
-        if usage_replaced != usage_expected:
-            return replace_py_less310(usage_replaced, usage_expected)
-        else:
-            if other == other_expected:
-                return True
-            if ARGPARSE_OLD and replace_py_less310(
-                other, other_expected
-            ):  # pragma: no cover
-                return True
-            if is_ok_with_add_quotes(other, other_expected):  # pragma: no cover
-                return True
-            if ok_with_replace_py_312(other, other_expected):  # pragma: no cover
-                return True
+    if not res.startswith("usage:"):  # expecting usage string
+        return False
+    usage, other = split_usage(res)
+    usage_expected, other_expected = split_usage(expected_res)
+    usage_replaced = replace_prog_name(usage, usage_expected)
+    if usage_replaced != usage_expected:
+        return replace_py_less310(usage_replaced, usage_expected)
+    if other == other_expected:
+        return True
+    if ARGPARSE_OLD and replace_py_less310(
+        other, other_expected
+    ):  # pragma: no cover
+        return True
+    if replace_add_quotes(other) == other_expected:
+        return True
+    if replace_remove_quotes(other) == other_expected:
+        return True
     return False
 
 
@@ -316,7 +316,7 @@ def replace_py_less310(text: str, expected: str) -> bool:
     return False
 
 
-def replace_py_312(text) -> str:
+def replace_add_quotes(text) -> str:
     """Replace text used in python from 3.12"""
 
     # from python 3.12 if wrong args, error string "invalid choice:"
@@ -339,20 +339,10 @@ def replace_py_312(text) -> str:
     )
 
 
-def ok_with_replace_py_312(text: str, expected: str) -> bool:
-    """check is ok with replace"""
-    return replace_py_312(text) == expected
-
-
-def replace_add_quotes(text: str) -> str:
+def replace_remove_quotes(text: str) -> str:
     """add quotes to choices"""
     return re.sub(
         r"\(choose from ((?:'[^']*'(?:, )?)+)\)",
         lambda m: "(choose from " + m.group(1).replace("'", "") + ")",
         text,
     )
-
-
-def is_ok_with_add_quotes(text: str, expected: str) -> bool:
-    """check is ok with add quotes"""
-    return replace_add_quotes(text) == expected

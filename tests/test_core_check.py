@@ -6,6 +6,7 @@ from cli_result.core import (
     get_args,
     get_examples,
     run_check_example,
+    replace_remove_quotes,
     replace_add_quotes,
 )
 
@@ -44,9 +45,9 @@ def test_run_check_example(example_name, file_list, arg):
     # here we have 1 error
     assert len(results) == 1
     error = results[0]
-    # replaced = replace_py_312(error.res)
+    replaced = replace_remove_quotes(error.res)
     # replaced = replace_add_quotes(error.res)
-    # if replaced equal expected it cant be error here
+    # # if replaced equal expected it cant be error here
     # assert replaced == error.exp
     assert error.res == error.exp
 
