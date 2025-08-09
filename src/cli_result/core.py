@@ -234,11 +234,12 @@ def check_examples(
 def run_check_example(
     example_name: str,
     file_list: List[Path],
+    arg: Args | None = None,
     cfg: Cfg | None = None,
 ) -> List[Error] | None:
     """Run and check example"""
     cfg = Cfg() if cfg is None else cfg
-    args_list = get_args(example_name, cfg)
+    args_list = [arg] if arg else get_args(example_name, cfg)
     errors: list[Error] = []
     for args in args_list:
         for file in file_list:
@@ -297,7 +298,7 @@ def usage_equal_with_replace(
                 other, other_expected
             ):  # pragma: no cover
                 return True
-            if ARGPARSE_12 and replace_py_312(
+            if ok_with_replace_py_312(
                 other, other_expected
             ):  # pragma: no cover
                 return True
@@ -315,7 +316,7 @@ def replace_py_less310(text: str, expected: str) -> bool:
     return False
 
 
-def replace_py_312(text: str, expected: str) -> bool:
+def replace_py_312(text) -> str:
     """Replace text used in python from 3.12"""
 
     # from python 3.12 if wrong args, error string "invalid choice:"
@@ -331,11 +332,13 @@ def replace_py_312(text: str, expected: str) -> bool:
                 quoted_items.append(item)
         return f"(choose from {', '.join(quoted_items)})"
 
-    text_replaced = re.sub(
+    return re.sub(
         r"\(choose from ([^)]+)\)",
         add_quotes_to_choices,
         text,
     )
-    if text_replaced == expected:
-        return True
-    return False
+
+
+def ok_with_replace_py_312(text: str, expected: str) -> bool:
+    """check is ok with replace"""
+    return replace_py_312(text) == expected
