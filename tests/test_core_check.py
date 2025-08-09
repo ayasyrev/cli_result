@@ -1,6 +1,13 @@
 import pytest
 
-from cli_result.core import Cfg, check_examples, get_args, get_examples, run_check_example, replace_py_312
+from cli_result.core import (
+    Cfg,
+    check_examples,
+    get_args,
+    get_examples,
+    run_check_example,
+    replace_add_quotes,
+)
 
 
 def test_check_examples():
@@ -37,10 +44,11 @@ def test_run_check_example(example_name, file_list, arg):
     # here we have 1 error
     assert len(results) == 1
     error = results[0]
-    replaced = replace_py_312(error.res)
-    # if reolaced equal expected it cant be error here
-    assert replaced == error.exp
-    # assert error.res == error.exp
+    # replaced = replace_py_312(error.res)
+    # replaced = replace_add_quotes(error.res)
+    # if replaced equal expected it cant be error here
+    # assert replaced == error.exp
+    assert error.res == error.exp
 
 
 cfg_extra = Cfg(examples_path="examples/examples_extra")

@@ -298,9 +298,9 @@ def usage_equal_with_replace(
                 other, other_expected
             ):  # pragma: no cover
                 return True
-            if ok_with_replace_py_312(
-                other, other_expected
-            ):  # pragma: no cover
+            if is_ok_with_add_quotes(other, other_expected):  # pragma: no cover
+                return True
+            if ok_with_replace_py_312(other, other_expected):  # pragma: no cover
                 return True
     return False
 
@@ -342,3 +342,17 @@ def replace_py_312(text) -> str:
 def ok_with_replace_py_312(text: str, expected: str) -> bool:
     """check is ok with replace"""
     return replace_py_312(text) == expected
+
+
+def replace_add_quotes(text: str) -> str:
+    """add quotes to choices"""
+    return re.sub(
+        r"\(choose from ((?:'[^']*'(?:, )?)+)\)",
+        lambda m: "(choose from " + m.group(1).replace("'", "") + ")",
+        text,
+    )
+
+
+def is_ok_with_add_quotes(text: str, expected: str) -> bool:
+    """check is ok with add quotes"""
+    return replace_add_quotes(text) == expected
