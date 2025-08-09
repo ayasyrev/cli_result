@@ -298,10 +298,11 @@ def usage_equal_with_replace(
         other, other_expected
     ):  # pragma: no cover
         return True
-    if replace_add_quotes(other) == other_expected:
+    if replace_add_quotes(other) == other_expected or replace_add_quotes(other_expected) == other:
         return True
-    if replace_remove_quotes(other) == other_expected:
+    if replace_remove_quotes(other) == other_expected or replace_remove_quotes(other_expected) == other:
         return True
+        
     return False
 
 

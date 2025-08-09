@@ -46,10 +46,8 @@ def test_run_check_example(example_name, file_list, arg):
     assert len(results) == 1
     error = results[0]
     replaced = replace_remove_quotes(error.res)
-    # replaced = replace_add_quotes(error.res)
     # # if replaced equal expected it cant be error here
-    # assert replaced == error.exp
-    assert error.res == error.exp
+    assert replaced == error.exp
 
 
 cfg_extra = Cfg(examples_path="examples/examples_extra")
