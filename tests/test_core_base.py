@@ -308,21 +308,17 @@ def test_usage_equal_with_replace_2():
     res = (
         "usage: example_2.py [-h] [--echo ECHO] {a,b} ...\n\n"
         "example_2.py: error: argument {a,b}: invalid choice: '' (choose from 'a', 'b')"
-
     )
     expected_res = (
         "usage: example_2.py [-h] [--echo ECHO] {a,b} ...\n\n"
         "example_2.py: error: argument {a,b}: invalid choice: '' (choose from a, b)"
-        
     )
     assert usage_equal_with_replace(res, expected_res)
 
     res = "usage: \n\na.py: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
-    expected_res = (
-        "usage: \n\na.py: invalid choice: 'cl_arg' (choose from a, b, c)"
-        
-    )
+    expected_res = "usage: \n\na.py: invalid choice: 'cl_arg' (choose from a, b, c)"
     assert usage_equal_with_replace(res, expected_res)
+
 
 def test_replace_remove_quotes():
     """test replace_remove_quotes"""
@@ -348,8 +344,6 @@ def test_replace_add_quotes():
     res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from a, b, c)"
     expected_res = "a.py: error: argument {a,b}: invalid choice: 'cl_arg' (choose from 'a', 'b', 'c')"
     assert replace_add_quotes(res) == expected_res
-
-    
 
 
 def test_write_examples(tmp_path: Path):

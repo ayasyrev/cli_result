@@ -15,6 +15,6 @@ cmd_a_err: a string
 
 cmd_b: b
 cmd_b_opt: b --baz X
-cmd_b_opt_err --baz AA
+cmd_b_opt_err: --baz AA
 cmd_b_help: b -h
 cmd_b_err: b string

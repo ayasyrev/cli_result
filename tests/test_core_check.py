@@ -6,8 +6,6 @@ from cli_result.core import (
     get_args,
     get_examples,
     run_check_example,
-    replace_remove_quotes,
-    replace_add_quotes,
 )
 
 
@@ -40,14 +38,7 @@ for example_name, file_list in examples_base:
 def test_run_check_example(example_name, file_list, arg):
     """test run_check_example"""
     results = run_check_example(example_name, file_list, arg=arg, cfg=cfg_base)
-    if results is None:
-        return
-    # here we have 1 error
-    assert len(results) == 1
-    error = results[0]
-    replaced = replace_remove_quotes(error.res)
-    # # if replaced equal expected it cant be error here
-    assert replaced == error.exp
+    assert results is None
 
 
 cfg_extra = Cfg(examples_path="examples/examples_extra")
