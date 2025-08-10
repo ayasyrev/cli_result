@@ -9,11 +9,9 @@ from .core import (
     run_module,
     Result,
 )
-from .version import __version__
 
 
 __all__ = (
-    "__version__",
     "Cfg",
     "check_examples",
     "get_args",
@@ -24,3 +22,7 @@ __all__ = (
     "run_module",
     "Result",
 )
+
+
+def main() -> None:
+    print("cli-result cl app not implemented yet.")

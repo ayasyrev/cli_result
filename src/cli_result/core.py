@@ -15,6 +15,7 @@ PathStr = Union[str, Path, None]
 
 
 ARGPARSE_OLD = sys.version_info.minor < 10
+ARGPARSE_12 = sys.version_info.minor >= 12
 
 
 @dataclass
@@ -104,7 +105,7 @@ def run_script(filename: str | Path, args: StrListStr = None) -> Result:
     if not Path(filename).exists():
         return Result("", "")
     res = subprocess.run(
-        ["python", filename, *args],
+        ["python3", filename, *args],
         capture_output=True,
         check=False,
     )
@@ -122,7 +123,7 @@ def run_module(
 ) -> Result:
     """run module"""
     res = subprocess.run(
-        ["python", "-m", module_name, *args],
+        ["python3", "-m", module_name, *args],
         capture_output=True,
         check=check,
         cwd=cwd,
@@ -146,14 +147,25 @@ def get_args(
     if not args_filename.exists():
         return []
     with open(args_filename, "r", encoding="utf-8") as file:
-        lines = [
-            line.split("#", maxsplit=1)[0].rstrip().split(":", maxsplit=1)
-            for line in file.readlines()
-            if line != "\n" and not line.startswith("#")
-        ]
-    return [
-        Args(item[0], item[1].split() if len(item) == 2 else None) for item in lines
-    ]
+        lines = []
+        for line in file.readlines():
+            line = line.split("#", maxsplit=1)[0].rstrip()
+            if not line:
+                continue
+
+            if ":" in line:
+                name_part, args_part = line.split(":", maxsplit=1)
+                arg_name = name_part.strip()
+                arg_list = args_part.strip().split() if args_part.strip() else []
+            else:
+                arg_name = line.strip()
+                parts = arg_name.split(maxsplit=1)
+                if len(parts) > 1:
+                    arg_list = parts[1].split()
+                else:
+                    arg_list = None
+            lines.append(Args(arg_name, arg_list))
+    return lines
 
 
 def write_result(
@@ -200,11 +212,19 @@ def read_result(name: str, arg_name: str, cfg: Cfg | None = None) -> Result:
     If not found, return empty strings
     """
     cfg = Cfg() if cfg is None else cfg
-    result_filename = Path(
-        cfg.examples_path,
-        cfg.results_path,
-        f"{name}{cfg.split}{arg_name}.txt",
+
+    # Get the absolute path to the current file (core.py)
+    current_file_path = Path(__file__).resolve()
+    # Get the project root directory (assuming core.py is in src/cli_result)
+    project_root = current_file_path.parent.parent.parent
+
+    result_filename = (
+        project_root
+        / cfg.examples_path
+        / cfg.results_path
+        / f"{name}{cfg.split}{arg_name}.txt"
     )
+
     if not result_filename.exists():
         return Result("", "")
     with open(result_filename, "r", encoding="utf-8") as file:
@@ -233,11 +253,12 @@ def check_examples(
 def run_check_example(
     example_name: str,
     file_list: List[Path],
+    arg: Args | None = None,
     cfg: Cfg | None = None,
 ) -> List[Error] | None:
     """Run and check example"""
     cfg = Cfg() if cfg is None else cfg
-    args_list = get_args(example_name, cfg)
+    args_list = [arg] if arg else get_args(example_name, cfg)
     errors: list[Error] = []
     for args in args_list:
         for file in file_list:
@@ -283,19 +304,70 @@ def usage_equal_with_replace(
     expected_res: str,
 ) -> bool:
     """Check if usage and after replace result is equal to expected"""
-    if res.startswith("usage:"):
-        usage, other = split_usage(res)
-        usage_expected, other_expected = split_usage(expected_res)
-        usage_replaced = replace_prog_name(usage, usage_expected)
-        if usage_replaced != usage_expected:
-            return replace_py_less310(usage_replaced, usage_expected)
-        else:
+    if not res.startswith("usage:"):  # expecting usage string
+        return False
+
+    usage, other = split_usage(res)
+    usage_expected, other_expected = split_usage(expected_res)
+
+    # Strip whitespace from both ends of 'other' parts
+    other = other.strip()
+    other_expected = other_expected.strip()
+    usage_replaced = replace_prog_name(usage, usage_expected)
+
+    # Apply normalization to usage as well, not just other
+    # Strip trailing whitespace first
+    usage_replaced = usage_replaced.rstrip()
+    usage_expected = usage_expected.rstrip()
+
+    if usage_replaced == usage_expected:
+        # Usage matches exactly, now check other
+        if other == other_expected:
+            return True
+        if ARGPARSE_OLD and replace_py_less310(
+            other, other_expected
+        ):  # pragma: no cover
+            return True
+
+        # Apply normalization to other parts
+        normalized_other = replace_remove_quotes(other)
+        normalized_expected = replace_remove_quotes(other_expected)
+        normalized_other = re.sub(r",\s*", ",", normalized_other)
+        normalized_expected = re.sub(r",\s*", ",", normalized_expected)
+
+        if normalized_other == normalized_expected:
+            return True
+    else:
+        # Usage doesn't match, try python < 3.10 compatibility
+        if replace_py_less310(usage_replaced, usage_expected):
+            return True
+
+        # Apply quote normalization to usage parts
+        usage_normalized = replace_remove_quotes(usage_replaced)
+        usage_expected_normalized = replace_remove_quotes(usage_expected)
+
+        # Standardize spacing around commas
+        usage_normalized = re.sub(r",\s*", ",", usage_normalized)
+        usage_expected_normalized = re.sub(r",\s*", ",", usage_expected_normalized)
+
+        if usage_normalized == usage_expected_normalized:
+            # Usage matches after normalization, now check other
             if other == other_expected:
                 return True
             if ARGPARSE_OLD and replace_py_less310(
                 other, other_expected
             ):  # pragma: no cover
                 return True
+
+            # Apply normalization to other parts
+            normalized_other = replace_remove_quotes(other)
+            normalized_expected = replace_remove_quotes(other_expected)
+            normalized_other = re.sub(r",\s*", ",", normalized_other)
+            normalized_expected = re.sub(r",\s*", ",", normalized_expected)
+
+            if normalized_other == normalized_expected:
+                return True
+
     return False
 
 
@@ -308,3 +380,35 @@ def replace_py_less310(text: str, expected: str) -> bool:
     if replaced == expected_replaced:
         return True
     return False
+
+
+def replace_add_quotes(text) -> str:
+    """Replace text used in python from 3.12"""
+
+    # from python 3.12 if wrong args, error string "invalid choice:"
+    # expected arguments printed without "'"
+    def add_quotes_to_choices(match):
+        choices_part = match.group(1)  # Everything between "choose from " and ")"
+        items = [item.strip() for item in choices_part.split(",")]
+        quoted_items = []
+        for item in items:
+            if not (item.startswith("'") and item.endswith("'")):
+                quoted_items.append(f"'{item}'")
+            else:
+                quoted_items.append(item)
+        return f"(choose from {', '.join(quoted_items)})"
+
+    return re.sub(
+        r"\(choose from ([^)]+)\)",
+        add_quotes_to_choices,
+        text,
+    )
+
+
+def replace_remove_quotes(text: str) -> str:
+    """add quotes to choices"""
+    return re.sub(
+        r"\(choose from ((?:'[^']*'(?:, )?)+)\)",
+        lambda m: "(choose from " + m.group(1).replace("'", "") + ")",
+        text,
+    )

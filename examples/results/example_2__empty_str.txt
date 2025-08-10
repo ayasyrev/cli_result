@@ -2,4 +2,4 @@
 # stdout
 # stderr
 usage: example_2.py [-h] [--echo ECHO] {a,b} ...
-example_2.py: error: argument {a,b}: invalid choice: '""' (choose from 'a', 'b')
+example_2.py: error: argument {a,b}: invalid choice: '""' (choose from a, b)

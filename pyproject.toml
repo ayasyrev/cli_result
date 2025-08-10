@@ -1,3 +1,21 @@
+[project]
+name = "cli-result"
+version = "0.3.5_dev"
+description = "Test for script result."
+readme = "README.md"
+authors = [
+    { name = "ayasyrev", email = "a.yasyrev@gmail.com" }
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+cli-result = "cli_result:main"
+
+[build-system]
+requires = ["uv_build>=0.8.3,<0.9.0"]
+build-backend = "uv_build"
+
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
 
@@ -7,3 +25,20 @@ source = ["cli_result"]
 
 [tool.coverage.report]
 show_missing = true
+
+[dependency-groups]
+dev = [
+    "black[jupyter]>=24.8.0",
+    "coverage[toml]>=7.6.1",
+    "flake8>=5.0.4",
+    "isort>=5.13.2",
+    "mypy>=1.14.1",
+    "nbmetaclean>=0.1.4",
+    "nox>=2025.5.1",
+    "pre-commit>=3.5.0",
+    "ruff>=0.12.8",
+]
+test = [
+    "pytest>=8.3.5",
+    "pytest-cov>=5.0.0",
+]
